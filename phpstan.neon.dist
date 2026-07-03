@@ -1,0 +1,22 @@
+includes:
+    # NB: l'extension.neon di larastan 1.x imposta checkGenericClassInNonGenericObjectType,
+    # opzione deprecata in phpstan 1.10+. Il warning e' upstream (non sopprimibile senza
+    # patchare il vendor) e non e' un errore: 'analyse' esce comunque 0.
+    - ./vendor/nunomaduro/larastan/extension.neon
+
+parameters:
+    level: 5
+
+    paths:
+        - app
+        - routes
+        - database
+
+    # PHPStan analizza il codice come sul runtime target.
+    phpVersion: 70333
+
+    excludePaths:
+        # Closure "inspire" con $this bindato a runtime dal command (falso positivo).
+        - ./routes/console.php
+        - ./bootstrap/cache/*
+        - ./storage/*

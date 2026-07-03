@@ -1,0 +1,11 @@
+.git
+.github
+.idea
+.vscode
+vendor
+node_modules
+storage/logs/*.log
+.env
+.env.backup
+.phpunit.result.cache
+docker-compose.override.yml

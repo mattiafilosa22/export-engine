@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<ruleset name="Gamindo">
+    <description>PSR-12 coding standard for the Gamindo Export Engine.</description>
+
+    <!-- Paths to scan -->
+    <file>app</file>
+    <file>routes</file>
+    <file>database</file>
+    <file>tests</file>
+
+    <!-- Excluded paths -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/bootstrap/cache/*</exclude-pattern>
+    <exclude-pattern>*/storage/*</exclude-pattern>
+
+    <!-- The standard -->
+    <rule ref="PSR12"/>
+
+    <!-- Le migration Laravel sono classi senza namespace per design -->
+    <rule ref="PSR1.Classes.ClassDeclaration.MissingNamespace">
+        <exclude-pattern>*/database/migrations/*</exclude-pattern>
+    </rule>
+
+    <!-- Metodi di test in snake_case: idioma PHPUnit/Laravel -->
+    <rule ref="PSR1.Methods.CamelCapsMethodName">
+        <exclude-pattern>*/tests/*</exclude-pattern>
+    </rule>
+
+    <!-- Show progress and use colors -->
+    <arg name="colors"/>
+    <arg value="p"/>
+    <arg name="extensions" value="php"/>
+</ruleset>
