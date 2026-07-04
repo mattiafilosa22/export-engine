@@ -1,7 +1,7 @@
 includes:
-    # NB: l'extension.neon di larastan 1.x imposta checkGenericClassInNonGenericObjectType,
-    # opzione deprecata in phpstan 1.10+. Il warning e' upstream (non sopprimibile senza
-    # patchare il vendor) e non e' un errore: 'analyse' esce comunque 0.
+    # Note: larastan 1.x's extension.neon sets checkGenericClassInNonGenericObjectType,
+    # an option deprecated in phpstan 1.10+. The warning is upstream (not suppressible
+    # without patching vendor) and is not an error: 'analyse' still exits 0.
     - ./vendor/nunomaduro/larastan/extension.neon
 
 parameters:
@@ -12,11 +12,11 @@ parameters:
         - routes
         - database
 
-    # PHPStan analizza il codice come sul runtime target.
+    # PHPStan analyzes the code as on the target runtime.
     phpVersion: 70333
 
     excludePaths:
-        # Closure "inspire" con $this bindato a runtime dal command (falso positivo).
+        # "inspire" closure with $this bound at runtime by the command (false positive).
         - ./routes/console.php
         - ./bootstrap/cache/*
         - ./storage/*

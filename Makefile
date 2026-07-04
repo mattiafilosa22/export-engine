@@ -2,7 +2,7 @@ DC ?= docker compose
 
 .PHONY: up down install key migrate fresh test lint lint-fix analyse bootstrap env
 
-# Crea il .env dal template se manca (docker-compose lo richiede via env_file).
+# Create .env from the template if missing (docker-compose needs it via env_file).
 env:
 	@test -f .env || cp .env.example .env
 
@@ -36,8 +36,8 @@ lint-fix:
 analyse:
 	$(DC) exec app composer analyse
 
-# Primo avvio in un comando: build + deps + app key + up.
-# Le migrazioni girano come servizio one-shot 'migrate' dentro 'up' (app/worker lo attendono).
+# First boot in one command: build + deps + app key + up.
+# Migrations run as the one-shot 'migrate' service inside 'up' (app/worker wait for it).
 bootstrap: env
 	$(DC) build
 	$(DC) run --rm --no-deps app composer install

@@ -1,25 +1,25 @@
 services:
-  # HTTP: php artisan serve (dev). Nelle slice successive si potra' passare a nginx+fpm.
+  # HTTP: php artisan serve (dev). Later slices may switch to nginx+fpm.
   app:
     build:
       context: .
       dockerfile: docker/Dockerfile
     command: php artisan serve --host=0.0.0.0 --port=8000
     ports:
-      # Porta host override-abile (default 8080; 8000 spesso occupata da OrbStack).
+      # Overridable host port (default 8080; 8000 often taken by OrbStack).
       - "${APP_PORT:-8080}:8000"
     volumes:
       - .:/var/www/html
     env_file:
       - .env
     depends_on:
-      # Attende il completamento delle migrazioni: niente race con la tabella jobs.
+      # Waits for migrations to finish: no race with the jobs table.
       migrate:
         condition: service_completed_successfully
       redis:
         condition: service_started
 
-  # Worker di coda separato (backend database).
+  # Separate queue worker (database backend).
   worker:
     build:
       context: .
@@ -31,12 +31,12 @@ services:
       - .env
     restart: unless-stopped
     depends_on:
-      # Parte solo dopo le migrazioni: la tabella jobs esiste gia'.
+      # Starts only after migrations: the jobs table already exists.
       migrate:
         condition: service_completed_successfully
 
-  # Migrazioni one-shot: gira, applica le migration e termina (exit 0).
-  # app e worker dipendono dal suo completamento -> nessun crash al primo boot.
+  # One-shot migrations: runs, applies the migrations and exits (exit 0).
+  # app and worker depend on its completion -> no crash on first boot.
   migrate:
     build:
       context: .
@@ -52,7 +52,7 @@ services:
 
   db:
     image: mysql:8.0
-    # native_password evita la frizione di caching_sha2 con mysqlnd di PHP 7.3
+    # native_password avoids the caching_sha2 friction with PHP 7.3 mysqlnd
     command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_DATABASE: gamindo
@@ -70,11 +70,11 @@ services:
       timeout: 5s
       retries: 10
 
-  # Stato volatile (progress/lock/cancellazione) delle slice successive.
+  # Volatile state (progress/lock/cancellation) for later slices.
   redis:
     image: redis:6-alpine
     ports:
-      # Porta host override-abile (default 6380; 6379 spesso occupata da OrbStack).
+      # Overridable host port (default 6380; 6379 often taken by OrbStack).
       - "${REDIS_PORT_HOST:-6380}:6379"
     volumes:
       - redisdata:/data

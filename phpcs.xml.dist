@@ -16,12 +16,12 @@
     <!-- The standard -->
     <rule ref="PSR12"/>
 
-    <!-- Le migration Laravel sono classi senza namespace per design -->
+    <!-- Laravel migrations are namespaceless classes by design -->
     <rule ref="PSR1.Classes.ClassDeclaration.MissingNamespace">
         <exclude-pattern>*/database/migrations/*</exclude-pattern>
     </rule>
 
-    <!-- Metodi di test in snake_case: idioma PHPUnit/Laravel -->
+    <!-- Test methods in snake_case: PHPUnit/Laravel idiom -->
     <rule ref="PSR1.Methods.CamelCapsMethodName">
         <exclude-pattern>*/tests/*</exclude-pattern>
     </rule>
