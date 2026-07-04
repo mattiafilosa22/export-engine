@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Event;
+use App\Models\Player;
 use App\Models\Version;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -23,7 +24,14 @@ class EventFactory extends Factory
 
         return [
             'version_id' => Version::factory(),
-            'player_id' => $this->faker->numberBetween(1, 1000),
+            // Real player in the SAME version as the event: the FK now enforces it.
+            // The closure reads version_id after it has resolved to an id (or an
+            // explicit override), so player and event never diverge on version.
+            'player_id' => function (array $attributes): int {
+                return Player::factory()
+                    ->create(['version_id' => $attributes['version_id']])
+                    ->id;
+            },
             'type' => $this->faker->randomElement($types),
             'occurred_at' => now()->subMinutes($this->faker->numberBetween(0, 10000)),
             'payload' => [

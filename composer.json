@@ -13,6 +13,7 @@
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
+        "knuckleswtf/scribe": "^2.0",
         "mockery/mockery": "^1.4.4",
         "nunomaduro/collision": "^5.10",
         "nunomaduro/larastan": "^1.0",

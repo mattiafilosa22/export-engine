@@ -16,6 +16,18 @@ class DownloadExportController extends Controller
 {
     private const CONTENT_TYPE_XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
+    /**
+     * Download an export file
+     *
+     * Stream the generated XLSX file. Available only when the export is `completed`.
+     *
+     * @group Exports
+     *
+     * @urlParam export string required The export UUID. Example: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+     *
+     * @response 409 {"message":"Export is not completed."}
+     * @response 404 {"message":"Export file not found."}
+     */
     public function __invoke(Export $export, FilesystemFactory $filesystem): StreamedResponse
     {
         if (! $export->isCompleted()) {

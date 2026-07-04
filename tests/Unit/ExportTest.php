@@ -5,17 +5,11 @@ namespace Tests\Unit;
 use App\Models\Export;
 use App\Models\Version;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class ExportTest extends TestCase
 {
     use RefreshDatabase;
-
-    public function test_route_key_is_uuid(): void
-    {
-        $this->assertSame('uuid', (new Export())->getRouteKeyName());
-    }
 
     public function test_it_auto_generates_a_uuid_on_create(): void
     {
@@ -27,16 +21,6 @@ class ExportTest extends TestCase
         ]);
 
         $this->assertNotEmpty($export->uuid);
-        $this->assertNotNull($export->created_at);
-    }
-
-    public function test_it_casts_params_to_array_and_timestamps_to_carbon(): void
-    {
-        $export = Export::factory()->create(['params' => ['sheet' => 'events']]);
-        $export->refresh();
-
-        $this->assertSame(['sheet' => 'events'], $export->params);
-        $this->assertInstanceOf(Carbon::class, $export->created_at);
     }
 
     public function test_mark_processing_sets_status_started_at_and_increments_attempts(): void

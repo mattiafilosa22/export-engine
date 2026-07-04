@@ -133,7 +133,7 @@ non è solo un'etichetta.
 | `version_id` | BIGINT UNSIGNED, FK→versions | no | Le domande appartengono a una versione. |
 | `code` | VARCHAR(20) | no | Codice leggibile ("Q1"). |
 | `text` | VARCHAR(500) | no | Testo della domanda. |
-| `type` | ENUM('single_choice','multiple_choice','nps','open') | no | **Determina il vincolo**: single_choice → una sola risposta per player; open → testo libero senza opzioni. |
+| `type` | ENUM('single_choice','multiple_choice','rating','open') | no | **Determina il vincolo**: single_choice → una sola risposta per player; open → testo libero senza opzioni. |
 | `position` | SMALLINT UNSIGNED | sì | Ordine di visualizzazione. |
 | `created_at` / `updated_at` | DATETIME | no | Audit. |
 
@@ -156,7 +156,7 @@ aggiornare milioni di righe. Qui invece l'opzione è definita **una volta**, e `
 | `code` | VARCHAR(20) | sì | Codice opzione ("A", "B") se serve. |
 | `label` | VARCHAR(255) | no | Testo dell'opzione ("Sostenibilità"). |
 | `position` | SMALLINT UNSIGNED | no | Ordine nell'export (così mostri sempre le opzioni nell'ordine giusto). |
-| `is_correct` | TINYINT(1) | sì | Se è l'opzione corretta (quiz). NULL per sondaggi/NPS. La correttezza sta **qui**, non su ogni risposta. |
+| `is_correct` | TINYINT(1) | sì | Se è l'opzione corretta (quiz). NULL per sondaggi/rating. La correttezza sta **qui**, non su ogni risposta. |
 | `created_at` / `updated_at` | DATETIME | no | Audit. |
 
 **Vincoli/indici:** UNIQUE `(question_id, label)`, indice `(question_id, position)`.

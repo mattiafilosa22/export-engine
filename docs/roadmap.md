@@ -72,7 +72,7 @@ Più export concorrenti (worker multipli, `SKIP LOCKED`); retry automatico; canc
 
 ### Slice 7 — Bonus (extra challenge)
 Preview limitata a 100 righe; template salvabili (`export_templates`); client di test client↔server;
-OpenAPI/Swagger.
+**documentazione API con Scribe `^2.x`** (OpenAPI/Swagger; la 3.x richiede PHP 7.4).
 **DoD:** almeno 1–2 bonus completi e documentati.
 
 ### Slice 8 — Deliverable finali

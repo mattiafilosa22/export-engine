@@ -3,17 +3,21 @@
 namespace Database\Seeders;
 
 use App\Models\Event;
+use App\Models\Player;
+use App\Models\User;
 use App\Models\Version;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
 /**
- * Minimal seed for the walking skeleton: one active version + ~3,000 events.
- * Chunked (bulk) inserts to avoid loading 3,000 models in memory.
+ * Minimal seed for the walking skeleton: one active version + players + ~3,000
+ * events. Chunked (bulk) inserts to avoid loading models in memory.
+ * Players are created before events so the `events.player_id` FK is satisfied.
  * Prints the version uuid, to use in the export POST.
  */
 class WalkingSkeletonSeeder extends Seeder
 {
+    private const TOTAL_PLAYERS = 500;
     private const TOTAL_EVENTS = 3000;
     private const CHUNK_SIZE = 500;
 
@@ -33,21 +37,49 @@ class WalkingSkeletonSeeder extends Seeder
             'status' => Version::STATUS_ACTIVE,
         ]);
 
-        $this->seedEvents($version);
+        $playerIds = $this->seedPlayers($version);
+        $this->seedEvents($version, $playerIds);
 
         $this->command->info("Version uuid: {$version->uuid}");
+        $this->command->info('Players seeded: ' . count($playerIds));
         $this->command->info('Events seeded: ' . self::TOTAL_EVENTS);
     }
 
-    private function seedEvents(Version $version): void
+    /**
+     * Creates users + players and returns the real player ids.
+     *
+     * @return array<int, int>
+     */
+    private function seedPlayers(Version $version): array
+    {
+        $ids = [];
+
+        for ($i = 1; $i <= self::TOTAL_PLAYERS; $i++) {
+            $user = User::factory()->create();
+            $player = Player::factory()->create([
+                'version_id' => $version->id,
+                'user_id' => $user->id,
+                'language' => self::LANGUAGES[$i % count(self::LANGUAGES)],
+            ]);
+            $ids[] = $player->id;
+        }
+
+        return $ids;
+    }
+
+    /**
+     * @param array<int, int> $playerIds
+     */
+    private function seedEvents(Version $version, array $playerIds): void
     {
         $now = Carbon::now();
+        $count = count($playerIds);
         $chunk = [];
 
         for ($i = 1; $i <= self::TOTAL_EVENTS; $i++) {
             $chunk[] = [
                 'version_id' => $version->id,
-                'player_id' => ($i % 500) + 1,
+                'player_id' => $playerIds[$i % $count],
                 'type' => self::TYPES[$i % count(self::TYPES)],
                 'occurred_at' => $now->copy()->subMinutes($i)->toDateTimeString(),
                 'payload' => json_encode([

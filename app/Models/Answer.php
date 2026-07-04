@@ -6,40 +6,35 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Append-only firehose log. Immutable: only `created_at`, no `updated_at`.
- * Hot JSON fields are exposed via the generated `payload_*` columns.
+ * The per-question fact: what a player chose. Append-only (no updated_at).
+ * Closed questions reference an answer option; open ones use `answer_text`.
  */
-class Event extends Model
+class Answer extends Model
 {
     use HasFactory;
 
-    public const TYPE_ANSWER_SUBMITTED = 'answer_submitted';
-    public const TYPE_GAME_COMPLETED = 'game_completed';
-    public const TYPE_REWARD_GRANTED = 'reward_granted';
-
-    // Immutable table: no updated_at.
+    // Append-only table: no updated_at.
     public const UPDATED_AT = null;
 
     protected $fillable = [
         'version_id',
         'player_id',
-        'type',
+        'event_id',
+        'question_id',
+        'answer_option_id',
+        'answer_text',
         'occurred_at',
-        'payload',
     ];
 
     protected $casts = [
         'occurred_at' => 'datetime',
         'created_at' => 'datetime',
-        'payload' => 'array',
-        'payload_score' => 'integer',
     ];
 
     /**
-     * Scopes the query to a version's events (first column of every index).
+     * Scopes the query to a version's answers.
      */
     public function scopeForVersion(Builder $query, int $versionId): Builder
     {
@@ -56,18 +51,18 @@ class Event extends Model
         return $this->belongsTo(Player::class);
     }
 
-    public function answers(): HasMany
+    public function event(): BelongsTo
     {
-        return $this->hasMany(Answer::class);
+        return $this->belongsTo(Event::class);
     }
 
-    public function transactions(): HasMany
+    public function question(): BelongsTo
     {
-        return $this->hasMany(Transaction::class);
+        return $this->belongsTo(Question::class);
     }
 
-    public function rewards(): HasMany
+    public function answerOption(): BelongsTo
     {
-        return $this->hasMany(Reward::class);
+        return $this->belongsTo(AnswerOption::class, 'answer_option_id');
     }
 }

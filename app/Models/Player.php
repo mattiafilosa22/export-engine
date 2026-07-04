@@ -9,37 +9,28 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Append-only firehose log. Immutable: only `created_at`, no `updated_at`.
- * Hot JSON fields are exposed via the generated `payload_*` columns.
+ * A user's participation in one version (grain: user + version).
+ * Holds the denormalized per-version `total_score`.
  */
-class Event extends Model
+class Player extends Model
 {
     use HasFactory;
 
-    public const TYPE_ANSWER_SUBMITTED = 'answer_submitted';
-    public const TYPE_GAME_COMPLETED = 'game_completed';
-    public const TYPE_REWARD_GRANTED = 'reward_granted';
-
-    // Immutable table: no updated_at.
-    public const UPDATED_AT = null;
-
     protected $fillable = [
         'version_id',
-        'player_id',
-        'type',
-        'occurred_at',
-        'payload',
+        'user_id',
+        'registered_at',
+        'total_score',
+        'language',
     ];
 
     protected $casts = [
-        'occurred_at' => 'datetime',
-        'created_at' => 'datetime',
-        'payload' => 'array',
-        'payload_score' => 'integer',
+        'registered_at' => 'datetime',
+        'total_score' => 'integer',
     ];
 
     /**
-     * Scopes the query to a version's events (first column of every index).
+     * Scopes the query to a version's players.
      */
     public function scopeForVersion(Builder $query, int $versionId): Builder
     {
@@ -51,9 +42,14 @@ class Event extends Model
         return $this->belongsTo(Version::class);
     }
 
-    public function player(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Player::class);
+        return $this->belongsTo(User::class);
+    }
+
+    public function events(): HasMany
+    {
+        return $this->hasMany(Event::class);
     }
 
     public function answers(): HasMany

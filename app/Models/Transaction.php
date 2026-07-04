@@ -6,40 +6,45 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Append-only firehose log. Immutable: only `created_at`, no `updated_at`.
- * Hot JSON fields are exposed via the generated `payload_*` columns.
+ * A money movement (append-only). DECIMAL amount, direction via `type`.
  */
-class Event extends Model
+class Transaction extends Model
 {
     use HasFactory;
 
-    public const TYPE_ANSWER_SUBMITTED = 'answer_submitted';
-    public const TYPE_GAME_COMPLETED = 'game_completed';
-    public const TYPE_REWARD_GRANTED = 'reward_granted';
+    public const TYPE_PURCHASE = 'purchase';
+    public const TYPE_SPEND = 'spend';
+    public const TYPE_REFUND = 'refund';
 
-    // Immutable table: no updated_at.
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_COMPLETED = 'completed';
+    public const STATUS_FAILED = 'failed';
+
+    // Append-only table: no updated_at.
     public const UPDATED_AT = null;
 
     protected $fillable = [
         'version_id',
         'player_id',
+        'event_id',
         'type',
+        'amount',
+        'currency',
+        'status',
+        'external_ref',
         'occurred_at',
-        'payload',
     ];
 
     protected $casts = [
+        'amount' => 'decimal:2',
         'occurred_at' => 'datetime',
         'created_at' => 'datetime',
-        'payload' => 'array',
-        'payload_score' => 'integer',
     ];
 
     /**
-     * Scopes the query to a version's events (first column of every index).
+     * Scopes the query to a version's transactions.
      */
     public function scopeForVersion(Builder $query, int $versionId): Builder
     {
@@ -56,18 +61,8 @@ class Event extends Model
         return $this->belongsTo(Player::class);
     }
 
-    public function answers(): HasMany
+    public function event(): BelongsTo
     {
-        return $this->hasMany(Answer::class);
-    }
-
-    public function transactions(): HasMany
-    {
-        return $this->hasMany(Transaction::class);
-    }
-
-    public function rewards(): HasMany
-    {
-        return $this->hasMany(Reward::class);
+        return $this->belongsTo(Event::class);
     }
 }

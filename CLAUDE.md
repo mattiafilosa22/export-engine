@@ -112,6 +112,8 @@ GET  /api/v1/exports/{exportId}/download
 - **Indici**: deliberati e verificati con `EXPLAIN`. Su `events` (write-heavy) tenerli essenziali.
 - **Engine/charset**: InnoDB + utf8mb4 ovunque.
 - **Export XLSX**: writer in streaming (**OpenSpout**) a memoria costante; lettura **keyset** (`lazyById`).
+- **Migration**: le migration di dominio in **stile classe anonima** (`return new class extends Migration`,
+  standard da Laravel 8.37+). Le migration di default del framework (`jobs`, `failed_jobs`) restano com'erano.
 
 ## Testing
 
@@ -130,6 +132,8 @@ GET  /api/v1/exports/{exportId}/download
 - **EditorConfig** per whitespace coerente.
 - **composer scripts**: `composer lint`, `composer analyse`, `composer test`.
 - **CI** (GitHub Actions): lint + analyse + test ad ogni push. Niente merge con pipeline rossa.
+- **Documentazione API**: **Scribe `^2.x`** (`php artisan scribe:generate`) — la 3.x richiede PHP 7.4,
+  incompatibile con 7.3. Genera HTML + OpenAPI + Postman dagli endpoint e dai FormRequest.
 
 ## Comandi
 
@@ -140,7 +144,8 @@ make fresh         # migrate:fresh --seed
 make test          # PHPUnit (feature + unit)
 make lint          # phpcs (PSR-12)
 make analyse       # phpstan
-php artisan gamindo:seed-demo --version=7 --players=20000 --events=2000000
+php artisan scribe:generate   # genera la documentazione API (Scribe)
+php artisan gamindo:seed-demo --version-id=7 --players=20000 --events=2000000
 ```
 
 ## Workflow — Human in the loop
