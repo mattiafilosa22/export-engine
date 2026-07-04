@@ -63,6 +63,7 @@ services:
       - "${DB_PORT_HOST:-3306}:3306"
     volumes:
       - dbdata:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
       interval: 5s
