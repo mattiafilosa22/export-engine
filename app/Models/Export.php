@@ -9,9 +9,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 /**
- * Stato durevole di un job di export asincrono: sistema di verita' dei tre
- * endpoint (crea / stato / download). Esposto nelle URL tramite `uuid`.
- * Timestamp di dominio gestiti a mano (created/started/completed), niente updated_at.
+ * Durable state of an async export job: source of truth for the three
+ * endpoints (create / status / download). Exposed in URLs via `uuid`.
+ * Domain timestamps handled manually (created/started/completed), no updated_at.
  */
 class Export extends Model
 {
@@ -25,7 +25,7 @@ class Export extends Model
 
     public const FORMAT_XLSX = 'xlsx';
 
-    // I timestamp di dominio (created_at/started_at/completed_at) sono gestiti dai marker.
+    // Domain timestamps (created_at/started_at/completed_at) handled by the markers.
     public $timestamps = false;
 
     protected $fillable = [
@@ -80,7 +80,7 @@ class Export extends Model
     }
 
     /**
-     * Marca l'inizio dell'elaborazione da parte del worker.
+     * Marks the start of processing by the worker.
      */
     public function markProcessing(): void
     {
@@ -91,7 +91,7 @@ class Export extends Model
     }
 
     /**
-     * Marca il completamento con il file generato.
+     * Marks completion with the generated file.
      */
     public function markCompleted(int $rows, string $filePath, int $fileSize): void
     {
@@ -105,7 +105,7 @@ class Export extends Model
     }
 
     /**
-     * Marca il fallimento con il messaggio dell'eccezione.
+     * Marks failure with the exception message.
      */
     public function markFailed(string $errorMessage): void
     {

@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 /**
- * La campagna/gioco pubblicato: radice a cui si agganciano eventi ed export.
- * Esposta nelle URL tramite `uuid` (route key), mai tramite id numerico.
+ * The published campaign/game: root that events and exports attach to.
+ * Exposed in URLs via `uuid` (route key), never via numeric id.
  */
 class Version extends Model
 {

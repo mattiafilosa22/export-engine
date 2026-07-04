@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Log append-only del firehose. Immutabile: solo `created_at`, niente `updated_at`.
- * I campi JSON "caldi" sono esposti dalle colonne generate `payload_*`.
+ * Append-only firehose log. Immutable: only `created_at`, no `updated_at`.
+ * Hot JSON fields are exposed via the generated `payload_*` columns.
  */
 class Event extends Model
 {
@@ -18,7 +18,7 @@ class Event extends Model
     public const TYPE_GAME_COMPLETED = 'game_completed';
     public const TYPE_REWARD_GRANTED = 'reward_granted';
 
-    // Tabella immutabile: nessun updated_at.
+    // Immutable table: no updated_at.
     public const UPDATED_AT = null;
 
     protected $fillable = [
@@ -37,7 +37,7 @@ class Event extends Model
     ];
 
     /**
-     * Restringe la query agli eventi di una versione (prima colonna di ogni indice).
+     * Scopes the query to a version's events (first column of every index).
      */
     public function scopeForVersion(Builder $query, int $versionId): Builder
     {

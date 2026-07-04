@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 
 /**
- * Liveness probe: infrastruttura, non un caso d'uso di dominio.
- * Per questo non usa lo stack FormRequest/Action/Resource (riservato al dominio).
+ * Liveness probe: infrastructure, not a domain use case.
+ * Hence it does not use the FormRequest/Action/Resource stack (reserved for domain).
  */
 class HealthController extends Controller
 {
