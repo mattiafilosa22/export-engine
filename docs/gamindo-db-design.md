@@ -17,7 +17,7 @@ Queste scelte si applicano ovunque; dirle una volta all'inizio dimostra metodo.
 | PK/FK **BIGINT UNSIGNED** | Coerenza, nessun negativo (un id non è < 0), margine per un firehose che cresce (INT si ferma a ~2,1 mld). |
 | Tempi in **DATETIME**, non TIMESTAMP | TIMESTAMP è 4 byte ma finisce nel 2038 e converte i fusi implicitamente. DATETIME copre 1000–9999. Salvo in **UTC**. |
 | Soldi in **DECIMAL**, mai FLOAT | Il float ha errori binari di arrotondamento: inaccettabili sul denaro. |
-| **Foreign key esplicite** per integrità | ...tranne valutare `events`: su 10M righe in ingestione massiva le FK aggiungono lock/overhead; spesso si rinuncia alla FK fisica e si garantisce l'integrità in app. |
+| **Foreign key esplicite** per integrità | Su **tutte** le tabelle, **incluso `events`**: a 10M righe il costo è trascurabile e il DB garantisce l'integrità anche contro scritture dirette (un `DELETE` grezzo non può creare orfani). `ON DELETE RESTRICT` sul genitore (niente cascade di massa); cancellazione campagne via **soft-delete**. Solo a scala estrema (partitioning/sharding, throughput altissimo) si valuterebbe di rimuoverla spostando l'integrità in applicazione. |
 | `created_at` / `updated_at` dove ha senso | Audit di base. Le tabelle *append-only* (events) non hanno `updated_at`. |
 
 Principio guida sulle performance: **modello di scrittura normalizzato** (verità, integrità,
