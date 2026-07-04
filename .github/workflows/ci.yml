@@ -8,23 +8,24 @@ jobs:
   quality:
     runs-on: ubuntu-latest
 
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: gamindo_test
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h localhost -uroot -proot"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=10
-
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Start MySQL 8 (native_password for PHP 7.3)
+        run: |
+          docker run -d --name mysql \
+            -e MYSQL_ROOT_PASSWORD=root \
+            -e MYSQL_DATABASE=gamindo_test \
+            -p 3306:3306 \
+            mysql:8.0 --default-authentication-plugin=mysql_native_password
+          echo "Waiting for MySQL to be ready..."
+          for i in $(seq 1 30); do
+            if docker exec mysql mysqladmin ping -h localhost -uroot -proot --silent; then
+              echo "MySQL ready."; break
+            fi
+            sleep 2
+          done
 
       - name: Setup PHP 7.3
         uses: shivammathur/setup-php@v2
