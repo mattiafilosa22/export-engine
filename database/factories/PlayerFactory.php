@@ -24,4 +24,13 @@ class PlayerFactory extends Factory
             'language' => $this->faker->randomElement(['it', 'en', 'es', 'fr']),
         ];
     }
+
+    /**
+     * A player resolvable by email: bound to the version and to a user with
+     * the given email (the grain PlayerResolver joins on).
+     */
+    public function resolvable(Version $version, string $email): self
+    {
+        return $this->for($version)->for(User::factory()->state(['email' => $email]));
+    }
 }

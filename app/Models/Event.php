@@ -29,6 +29,7 @@ class Event extends Model
         'type',
         'occurred_at',
         'payload',
+        'dedup_key',
     ];
 
     protected $casts = [

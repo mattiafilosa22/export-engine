@@ -1,6 +1,6 @@
 DC ?= docker compose
 
-.PHONY: up down install key migrate fresh test lint lint-fix analyse bootstrap env
+.PHONY: up down install key migrate fresh test lint lint-fix analyse bootstrap env docs
 
 # Create .env from the template if missing (docker-compose needs it via env_file).
 env:
@@ -35,6 +35,11 @@ lint-fix:
 
 analyse:
 	$(DC) exec app composer analyse
+
+# Regenerate the API docs (HTML + OpenAPI + Postman) from Scribe annotations. Served at /docs/.
+docs:
+	$(DC) exec app php artisan config:clear
+	$(DC) exec app php artisan scribe:generate
 
 # First boot in one command: build + deps + app key + up.
 # Migrations run as the one-shot 'migrate' service inside 'up' (app/worker wait for it).

@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\Api\V1\CreateExportController;
 use App\Http\Controllers\Api\V1\DownloadExportController;
+use App\Http\Controllers\Api\V1\IngestEventsController;
+use App\Http\Controllers\Api\V1\IngestPlayersController;
 use App\Http\Controllers\Api\V1\ShowExportController;
+use App\Http\Controllers\Api\V1\ShowImportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,6 +18,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->group(function () {
+    // Ingestion (hybrid: sync validation at the boundary, async chunked writes).
+    Route::post('versions/{version}/players', IngestPlayersController::class)->name('imports.players.store');
+    Route::post('versions/{version}/events', IngestEventsController::class)->name('imports.events.store');
+    Route::get('imports/{import}', ShowImportController::class)->name('imports.show');
+
+    // Export.
     Route::post('versions/{version}/exports', CreateExportController::class)->name('exports.store');
     Route::get('exports/{export}', ShowExportController::class)->name('exports.show');
     Route::get('exports/{export}/download', DownloadExportController::class)->name('exports.download');

@@ -10,7 +10,31 @@ return [
     /*
      * A short description of your API. Will be included in the docs webpage, Postman collection and OpenAPI spec.
      */
-    'description' => 'REST API to ingest campaign events/entities and generate asynchronous XLSX export reports.',
+    'description' => <<<'MD'
+Ingest large batches of campaign events and player data, then generate customizable **XLSX reports** — all **asynchronously**. You never block on a request.
+
+### How it works
+
+1. **Submit** a batch or an export request. The API replies immediately with **`202 Accepted`**, a resource `id`, and `status: pending`.
+2. **Poll** the matching status endpoint until `status` is `completed` (or `failed`).
+3. **Read the result** — download the XLSX for exports, or read the counters for imports.
+
+**Base URL:** `http://localhost:8080/api/v1`
+
+### Ingestion (hybrid)
+
+Validated synchronously at the edge, written asynchronously in transactional chunks. **Idempotent**: re-sending the same batch never duplicates.
+
+### Export
+
+Queued to a worker that streams the XLSX at constant memory, then exposes it for download once `completed`.
+
+### Conventions
+
+- Resources are addressed by a non-enumerable **UUID**.
+- Batches over **5000 rows** are rejected with **`413`**; malformed payloads with **`422`**.
+- Domain times are **UTC** (ISO-8601).
+MD,
 
 
     /*
