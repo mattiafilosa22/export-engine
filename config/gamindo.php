@@ -16,6 +16,69 @@ return [
     'ingestion' => [
         'max_batch_rows' => (int) env('GAMINDO_MAX_BATCH_ROWS', 5000),
         'chunk_size' => (int) env('GAMINDO_INGEST_CHUNK_SIZE', 1000),
+
+        // Event type => typed record it also produces (answers/transactions/rewards),
+        // linked to the real event_id. `statics` are fixed column values (defaults);
+        // `fields` map payload keys to columns (payload overrides a same-named static).
+        // A field may be `required`, constrained to `one_of`, `numeric`, or a foreign
+        // `ref` (question|answer_option) that must exist in the version. `dedup` picks
+        // insertOrIgnore (answers: one per version/player/question) over insert. Only
+        // events actually inserted get a typed row (idempotent); missing/invalid fields
+        // skip the typed row gracefully without failing the batch.
+        'typed_records' => [
+            \App\Models\Event::TYPE_ANSWER_SUBMITTED => [
+                'table' => 'answers',
+                'dedup' => true,
+                'occurred_at' => 'occurred_at',
+                'fields' => [
+                    'question_id' => ['column' => 'question_id', 'required' => true, 'ref' => 'question'],
+                    'answer_option_id' => ['column' => 'answer_option_id', 'ref' => 'answer_option'],
+                    'answer_text' => ['column' => 'answer_text'],
+                ],
+                'require_any' => ['answer_option_id', 'answer_text'],
+            ],
+
+            \App\Models\Event::TYPE_TRANSACTION => [
+                'table' => 'transactions',
+                'dedup' => false,
+                'occurred_at' => 'occurred_at',
+                'statics' => ['status' => \App\Models\Transaction::STATUS_COMPLETED],
+                'fields' => [
+                    'type' => ['column' => 'type', 'required' => true, 'one_of' => [
+                        \App\Models\Transaction::TYPE_PURCHASE,
+                        \App\Models\Transaction::TYPE_SPEND,
+                        \App\Models\Transaction::TYPE_REFUND,
+                    ]],
+                    'amount' => ['column' => 'amount', 'required' => true, 'numeric' => true],
+                    'currency' => ['column' => 'currency', 'required' => true],
+                    'status' => ['column' => 'status', 'one_of' => [
+                        \App\Models\Transaction::STATUS_PENDING,
+                        \App\Models\Transaction::STATUS_COMPLETED,
+                        \App\Models\Transaction::STATUS_FAILED,
+                    ]],
+                    'external_ref' => ['column' => 'external_ref'],
+                ],
+            ],
+
+            \App\Models\Event::TYPE_REWARD_GRANTED => [
+                'table' => 'rewards',
+                'dedup' => false,
+                'occurred_at' => 'granted_at',
+                'statics' => ['status' => \App\Models\Reward::STATUS_GRANTED],
+                'fields' => [
+                    'reward_type' => ['column' => 'reward_type', 'required' => true],
+                    'reward_code' => ['column' => 'reward_code'],
+                ],
+            ],
+        ],
+
+        // Foreign `ref` name (used by typed_records fields) => table to validate
+        // the id against, scoped to the version. Keeps the FK-existence check
+        // config-driven (no hard-coded table names in the job).
+        'reference_tables' => [
+            'question' => 'questions',
+            'answer_option' => 'answer_options',
+        ],
     ],
 
     /*

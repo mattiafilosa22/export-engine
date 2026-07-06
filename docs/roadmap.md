@@ -70,12 +70,33 @@ Writer **OpenSpout** a memoria costante; aggiornamento `progress`; fino a 500k r
 Più export concorrenti (worker multipli, `SKIP LOCKED`); retry automatico; cancellazione; progress %.
 **DoD:** export concorrenti isolati; cancellazione e retry funzionanti.
 
-### Slice 7 — Bonus (extra challenge)
+### Slice 7 — Copertura ingestione (traccia): player_id, POST /versions, transactions/answers/rewards event-driven
+**Scopo:** chiudere i gap di copertura dell'ingestione rispetto alla traccia.
+**Cosa include:**
+- **Eventi**: accettano **`player_id`** (contratto traccia, required); `player_email` resta come fallback
+  opzionale. Il payload evento esatto della traccia funziona.
+- **`POST /versions`**: creazione versione sincrona (201, uuid lato server); controller sottile → Action → Resource.
+- **`transactions`/`answers`/`rewards` event-driven**: dall'evento (`type` + `payload`) si crea la riga
+  tipizzata collegata via `event_id`. Mappa `type`→tabella/campi **configurabile** (`config/gamindo.php`);
+  mapping isolato in `TypedRecordMapper`/`TypedRecordWriter` (SRP). **Idempotenza**: la riga tipizzata è
+  creata solo per gli eventi effettivamente inseriti (id contigui), nessun doppione su retry.
+- Skip grazioso (+log) dei tipizzati con payload incompleto o ref inesistente, senza far fallire il batch.
+**Criteri di accettazione:** payload evento della traccia (con `player_id`) → 202; `POST /versions` crea la
+versione; un evento `answer_submitted` crea evento + riga `answers` (via event_id); reinvio del batch non
+duplica (eventi + tipizzati).
+**DoD:** entità della traccia ingeribili, idempotenza verificata, test verdi (lint/analyse/test).
+
+### Slice 8 — Riordino controller per feature
+**Scopo:** scalabilità della struttura HTTP. Sottocartelle `Api/V1/Export/`, `Api/V1/Ingestion/`,
+`Api/V1/Version/`, coerente anche su Requests/Actions/Resources.
+**DoD:** rotte invariate, controller organizzati per feature, test verdi.
+
+### Slice 9 — Bonus (extra challenge)
 Preview limitata a 100 righe; template salvabili (`export_templates`); client di test client↔server;
 **documentazione API con Scribe `^2.x`** (OpenAPI/Swagger; la 3.x richiede PHP 7.4).
 **DoD:** almeno 1–2 bonus completi e documentati.
 
-### Slice 8 — Deliverable finali
+### Slice 10 — Deliverable finali
 README (setup, comandi di avvio, comandi test, esempi cURL); esempio di export generato; copertura test.
 **DoD:** un revisore esterno clona, segue il README e ottiene l'output senza attriti.
 
@@ -84,10 +105,11 @@ README (setup, comandi di avvio, comandi test, esempi cURL); esempio di export g
 | Deliverable richiesto | Slice |
 |---|---|
 | Repository completo | tutte |
-| README (setup, comandi, test, cURL) | 8 |
-| Esempio di export generato | 5 / 8 |
-| Tutti i comandi per l'output | 8 |
-| Extra challenge (preview, template, retry, progress, cancellazione, client) | 6 / 7 |
+| Ingestione entità (versions, transactions, answers, rewards) | 7 |
+| README (setup, comandi, test, cURL) | 10 |
+| Esempio di export generato | 5 / 10 |
+| Tutti i comandi per l'output | 10 |
+| Extra challenge (preview, template, retry, progress, cancellazione, client) | 6 / 9 |
 
 ## Note
 
@@ -95,7 +117,7 @@ La roadmap **è** il racconto del progetto: "scheletro end-to-end per validare l
 modello dati → ingestione ibrida → export configurabile → streaming → robustezza → bonus → deliverable",
 con un gate umano e un ciclo di review a ogni passo.
 
-## Client di test (demo-client) — dettaglio Slice 7
+## Client di test (demo-client) — dettaglio Slice 9
 
 Comando Artisan **`gamindo:demo-client --version=7`** che fa da consumatore machine-to-machine della
 propria API (usa il client HTTP di Laravel/Guzzle, con **API key** in header). Esercita l'intero ciclo

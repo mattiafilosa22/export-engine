@@ -17,7 +17,7 @@ class IngestEventsTest extends IngestionTestCase
         $version = Version::factory()->create();
 
         $response = $this->postJson("/api/v1/versions/{$version->uuid}/events", [
-            'events' => [$this->eventRow('evt-1', 'a@example.com')],
+            'events' => [$this->eventRow('evt-1', 1)],
         ]);
 
         $response->assertStatus(202)
@@ -31,12 +31,12 @@ class IngestEventsTest extends IngestionTestCase
     public function test_the_worker_appends_events_with_dedup_key(): void
     {
         $version = Version::factory()->create();
-        Player::factory()->resolvable($version, 'a@example.com')->create();
-        Player::factory()->resolvable($version, 'b@example.com')->create();
+        $a = Player::factory()->resolvable($version, 'a@example.com')->create();
+        $b = Player::factory()->resolvable($version, 'b@example.com')->create();
 
         $import = $this->queueEventsImport($version, [
-            $this->eventRow('evt-1', 'a@example.com'),
-            $this->eventRow('evt-2', 'b@example.com'),
+            $this->eventRow('evt-1', (int) $a->id),
+            $this->eventRow('evt-2', (int) $b->id),
         ]);
 
         $this->work();
@@ -48,16 +48,20 @@ class IngestEventsTest extends IngestionTestCase
         $this->assertSame(0, $import->failed);
 
         $this->assertDatabaseCount('events', 2);
-        $this->assertDatabaseHas('events', ['version_id' => $version->id, 'dedup_key' => 'evt-1']);
+        $this->assertDatabaseHas('events', [
+            'version_id' => $version->id,
+            'player_id' => $a->id,
+            'dedup_key' => 'evt-1',
+        ]);
     }
 
     public function test_a_resent_batch_does_not_duplicate_events_and_counts_duplicates(): void
     {
         $version = Version::factory()->create();
-        Player::factory()->resolvable($version, 'a@example.com')->create();
+        $a = Player::factory()->resolvable($version, 'a@example.com')->create();
         $rows = [
-            $this->eventRow('evt-1', 'a@example.com'),
-            $this->eventRow('evt-2', 'a@example.com'),
+            $this->eventRow('evt-1', (int) $a->id),
+            $this->eventRow('evt-2', (int) $a->id),
         ];
 
         $this->queueEventsImport($version, $rows);
@@ -75,11 +79,11 @@ class IngestEventsTest extends IngestionTestCase
     public function test_unresolvable_player_rows_are_counted_failed_without_blocking_the_batch(): void
     {
         $version = Version::factory()->create();
-        Player::factory()->resolvable($version, 'a@example.com')->create();
+        $a = Player::factory()->resolvable($version, 'a@example.com')->create();
 
         $import = $this->queueEventsImport($version, [
-            $this->eventRow('evt-1', 'a@example.com'),
-            $this->eventRow('evt-2', 'ghost@example.com'),
+            $this->eventRow('evt-1', (int) $a->id),
+            $this->eventRow('evt-2', 999999), // no such player in the version
         ]);
 
         $this->work();
@@ -98,7 +102,7 @@ class IngestEventsTest extends IngestionTestCase
         $version = Version::factory()->create();
 
         $events = array_map(function (int $i): array {
-            return $this->eventRow("evt-{$i}", 'a@example.com');
+            return $this->eventRow("evt-{$i}", 1);
         }, range(1, 3));
 
         $response = $this->postJson("/api/v1/versions/{$version->uuid}/events", ['events' => $events]);
@@ -107,13 +111,13 @@ class IngestEventsTest extends IngestionTestCase
         Queue::assertNothingPushed();
     }
 
-    public function test_it_returns_422_when_a_row_is_missing_the_player_email(): void
+    public function test_it_returns_422_when_a_row_is_missing_the_player_id(): void
     {
         Queue::fake();
         $version = Version::factory()->create();
 
-        $row = $this->eventRow('evt-1', 'a@example.com');
-        unset($row['player_email']);
+        $row = $this->eventRow('evt-1', 1);
+        unset($row['player_id']);
 
         $response = $this->postJson("/api/v1/versions/{$version->uuid}/events", ['events' => [$row]]);
 
@@ -121,13 +125,31 @@ class IngestEventsTest extends IngestionTestCase
         Queue::assertNothingPushed();
     }
 
+    public function test_a_player_email_only_row_still_resolves_as_a_fallback(): void
+    {
+        $version = Version::factory()->create();
+        $a = Player::factory()->resolvable($version, 'a@example.com')->create();
+
+        // player_id present but unknown; player_email is the valid fallback.
+        $row = $this->eventRow('evt-1', 999999);
+        $row['player_email'] = 'a@example.com';
+
+        $import = $this->queueEventsImport($version, [$row]);
+        $this->work();
+
+        $import->refresh();
+        $this->assertSame(1, $import->inserted);
+        $this->assertSame(0, $import->failed);
+        $this->assertDatabaseHas('events', ['version_id' => $version->id, 'player_id' => $a->id]);
+    }
+
     public function test_events_without_a_dedup_key_are_always_appended(): void
     {
         $version = Version::factory()->create();
-        Player::factory()->resolvable($version, 'a@example.com')->create();
+        $a = Player::factory()->resolvable($version, 'a@example.com')->create();
         $rows = [
-            $this->eventRow(null, 'a@example.com'),
-            $this->eventRow(null, 'a@example.com'),
+            $this->eventRow(null, (int) $a->id),
+            $this->eventRow(null, (int) $a->id),
         ];
 
         $first = $this->queueEventsImport($version, $rows);
@@ -149,11 +171,11 @@ class IngestEventsTest extends IngestionTestCase
     public function test_events_with_a_blank_dedup_key_are_always_appended(): void
     {
         $version = Version::factory()->create();
-        Player::factory()->resolvable($version, 'a@example.com')->create();
+        $a = Player::factory()->resolvable($version, 'a@example.com')->create();
         // Empty string and whitespace-only both normalize to NULL via trim.
         $rows = [
-            $this->eventRowWithRawDedupKey('', 'a@example.com'),
-            $this->eventRowWithRawDedupKey('   ', 'a@example.com'),
+            $this->eventRowWithRawDedupKey('', (int) $a->id),
+            $this->eventRowWithRawDedupKey('   ', (int) $a->id),
         ];
 
         $this->queueEventsImport($version, $rows);
@@ -171,10 +193,10 @@ class IngestEventsTest extends IngestionTestCase
     public function test_a_mixed_batch_dedups_keyed_rows_and_appends_keyless_ones(): void
     {
         $version = Version::factory()->create();
-        Player::factory()->resolvable($version, 'a@example.com')->create();
+        $a = Player::factory()->resolvable($version, 'a@example.com')->create();
         $rows = [
-            $this->eventRow('evt-1', 'a@example.com'),
-            $this->eventRow(null, 'a@example.com'),
+            $this->eventRow('evt-1', (int) $a->id),
+            $this->eventRow(null, (int) $a->id),
         ];
 
         $this->queueEventsImport($version, $rows);
@@ -192,7 +214,7 @@ class IngestEventsTest extends IngestionTestCase
     public function test_it_returns_404_for_an_unknown_version(): void
     {
         $response = $this->postJson('/api/v1/versions/' . Str::uuid() . '/events', [
-            'events' => [$this->eventRow('evt-1', 'a@example.com')],
+            'events' => [$this->eventRow('evt-1', 1)],
         ]);
 
         $response->assertStatus(404);
@@ -211,10 +233,10 @@ class IngestEventsTest extends IngestionTestCase
     /**
      * @return array<string, mixed>
      */
-    private function eventRow(?string $dedupKey, string $email): array
+    private function eventRow(?string $dedupKey, int $playerId): array
     {
         $row = [
-            'player_email' => $email,
+            'player_id' => $playerId,
             'type' => 'game_completed',
             'occurred_at' => '2026-01-15T10:00:00Z',
             'payload' => ['score' => 42],
@@ -233,9 +255,9 @@ class IngestEventsTest extends IngestionTestCase
      *
      * @return array<string, mixed>
      */
-    private function eventRowWithRawDedupKey(string $dedupKey, string $email): array
+    private function eventRowWithRawDedupKey(string $dedupKey, int $playerId): array
     {
-        $row = $this->eventRow(null, $email);
+        $row = $this->eventRow(null, $playerId);
         $row['dedup_key'] = $dedupKey;
 
         return $row;

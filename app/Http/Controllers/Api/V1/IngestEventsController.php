@@ -30,13 +30,15 @@ class IngestEventsController extends Controller
      *
      * @bodyParam events object[] required The events to append (max 5000).
      * @bodyParam events[].dedup_key string Optional idempotency key, unique per version. Omit to append. Example: evt-1
-     * @bodyParam events[].player_email string required The player's email (must exist in the version). Example: x@a.com
-     * @bodyParam events[].type string required The event type. Example: game_completed
+     * @bodyParam events[].player_id integer required The player's id in the version. Example: 42
+     * @bodyParam events[].player_email string Optional fallback identifier. Example: x@a.com
+     * @bodyParam events[].type string required The event type. Example: transaction
      * @bodyParam events[].occurred_at string required When the event occurred. Example: 2026-01-15T10:00:00Z
+     * @bodyParam events[].payload object Event data; also feeds the typed row. Example: {"amount":9.99}
      *
      * @response 202 {"data":{"id":"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d","type":"events","status":"pending"}}
      * @response 413 {"message":"Batch too large."}
-     * @response 422 {"message":"The given data was invalid.","errors":{"events.0.player_email":["Required."]}}
+     * @response 422 {"message":"The given data was invalid.","errors":{"events.0.player_id":["Required."]}}
      * @response 404 {"message":"No query results for model [App\\Models\\Version]."}
      */
     public function __invoke(

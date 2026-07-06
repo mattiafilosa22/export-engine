@@ -39,7 +39,10 @@ class StoreEventsImportRequest extends FormRequest
         return [
             'events' => ['required', 'array', 'min:1'],
             'events.*.dedup_key' => ['nullable', 'string', 'max:64'],
-            'events.*.player_email' => ['required', 'email'],
+            // player_id is the traccia contract (always present); player_email is
+            // kept as an optional fallback identifier for backward compatibility.
+            'events.*.player_id' => ['required', 'integer'],
+            'events.*.player_email' => ['nullable', 'email'],
             'events.*.type' => ['required', 'string', 'max:40'],
             'events.*.occurred_at' => ['required', 'date'],
             'events.*.payload' => ['nullable', 'array'],

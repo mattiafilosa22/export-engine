@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\CancelExportController;
 use App\Http\Controllers\Api\V1\CreateExportController;
+use App\Http\Controllers\Api\V1\CreateVersionController;
 use App\Http\Controllers\Api\V1\DownloadExportController;
 use App\Http\Controllers\Api\V1\IngestEventsController;
 use App\Http\Controllers\Api\V1\IngestPlayersController;
@@ -19,6 +20,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->group(function () {
+    // Versions (small, synchronous create).
+    Route::post('versions', CreateVersionController::class)->name('versions.store');
+
     // Ingestion (hybrid: sync validation at the boundary, async chunked writes).
     Route::post('versions/{version}/players', IngestPlayersController::class)->name('imports.players.store');
     Route::post('versions/{version}/events', IngestEventsController::class)->name('imports.events.store');

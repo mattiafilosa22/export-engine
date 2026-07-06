@@ -45,4 +45,25 @@ class PlayerResolverTest extends TestCase
 
         $this->assertSame([], (new PlayerResolver())->resolve($version->id, []));
     }
+
+    public function test_existing_ids_keeps_only_player_ids_in_the_version(): void
+    {
+        $version = Version::factory()->create();
+        $other = Version::factory()->create();
+        $mine = Player::factory()->create(['version_id' => $version->id]);
+        $theirs = Player::factory()->create(['version_id' => $other->id]);
+
+        $valid = (new PlayerResolver())->existingIds($version->id, [$mine->id, $theirs->id, 999999]);
+
+        $this->assertArrayHasKey((int) $mine->id, $valid);
+        $this->assertArrayNotHasKey((int) $theirs->id, $valid);
+        $this->assertArrayNotHasKey(999999, $valid);
+    }
+
+    public function test_existing_ids_returns_an_empty_set_for_no_ids(): void
+    {
+        $version = Version::factory()->create();
+
+        $this->assertSame([], (new PlayerResolver())->existingIds($version->id, []));
+    }
 }

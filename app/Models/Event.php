@@ -20,6 +20,10 @@ class Event extends Model
     public const TYPE_GAME_COMPLETED = 'game_completed';
     public const TYPE_REWARD_GRANTED = 'reward_granted';
 
+    // A single money-movement event type; the direction (purchase/spend/refund)
+    // travels in the payload, mirroring how reward is a single event type.
+    public const TYPE_TRANSACTION = 'transaction';
+
     // Immutable table: no updated_at.
     public const UPDATED_AT = null;
 
