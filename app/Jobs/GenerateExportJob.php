@@ -2,9 +2,12 @@
 
 namespace App\Jobs;
 
-use App\Models\Event;
 use App\Models\Export;
-use App\Support\Export\EventXlsxWriter;
+use App\Support\Export\ExportSpecParser;
+use App\Support\Export\Query\FilterApplier;
+use App\Support\Export\Sheet\GenericSheetBuilder;
+use App\Support\Export\Sheet\Sheet;
+use App\Support\Export\XlsxExportWriter;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -17,9 +20,9 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Heart of the async pipeline: reads a version's events via keyset and
- * streams the XLSX, updating the export's durable state.
- * Idempotent: an already-terminal export is not reprocessed.
+ * Heart of the async pipeline: parses the export's params into sheets and
+ * streams a multi-sheet XLSX at constant memory, updating the export's durable
+ * state. Idempotent: an already-terminal export is not reprocessed.
  */
 class GenerateExportJob implements ShouldQueue
 {
@@ -32,8 +35,6 @@ class GenerateExportJob implements ShouldQueue
     public $timeout = 90;
 
     private const EXPORT_DIR = 'exports';
-    private const KEYSET_CHUNK = 1000;
-    private const HEADER = ['id', 'type', 'occurred_at', 'language', 'score'];
 
     /** @var string */
     private $exportUuid;
@@ -48,8 +49,13 @@ class GenerateExportJob implements ShouldQueue
         return $this->exportUuid;
     }
 
-    public function handle(LoggerInterface $logger, Filesystem $disk, EventXlsxWriter $writer): void
-    {
+    public function handle(
+        LoggerInterface $logger,
+        Filesystem $disk,
+        XlsxExportWriter $writer,
+        ExportSpecParser $parser,
+        FilterApplier $filters
+    ): void {
         // Fresh reload of the state from the uuid received in the constructor.
         $export = Export::where('uuid', $this->exportUuid)->first();
 
@@ -71,7 +77,7 @@ class GenerateExportJob implements ShouldQueue
         $logger->info('export.start', $context);
 
         try {
-            $relativePath = $this->generateFile($export, $disk, $writer);
+            $relativePath = $this->generateFile($export, $disk, $writer, $parser, $filters);
             $size = (int) $disk->size($relativePath);
             $export->markCompleted((int) $export->processed_rows, $relativePath, $size);
 
@@ -94,8 +100,13 @@ class GenerateExportJob implements ShouldQueue
      * Generates the XLSX file and returns the relative path on disk.
      * Updates processed_rows/total_rows on the model with the number of rows written.
      */
-    private function generateFile(Export $export, Filesystem $disk, EventXlsxWriter $writer): string
-    {
+    private function generateFile(
+        Export $export,
+        Filesystem $disk,
+        XlsxExportWriter $writer,
+        ExportSpecParser $parser,
+        FilterApplier $filters
+    ): string {
         if (! $disk instanceof FilesystemAdapter) {
             throw new RuntimeException('Export disk must support absolute filesystem paths.');
         }
@@ -103,7 +114,7 @@ class GenerateExportJob implements ShouldQueue
         $disk->makeDirectory(self::EXPORT_DIR);
         $relativePath = self::EXPORT_DIR . '/' . $export->uuid . '.xlsx';
 
-        $rows = $writer->write($disk->path($relativePath), $this->rows($export), self::HEADER);
+        $rows = $writer->write($disk->path($relativePath), $this->buildSheets($export, $parser, $filters));
 
         $export->total_rows = $rows;
         $export->processed_rows = $rows;
@@ -112,25 +123,20 @@ class GenerateExportJob implements ShouldQueue
     }
 
     /**
-     * Export rows via keyset pagination (constant memory): never OFFSET.
+     * Turns the export's params into the ordered list of configurable sheets.
      *
-     * @return \Generator<int, array<int, scalar|null>>
+     * @return array<int, Sheet>
      */
-    private function rows(Export $export): \Generator
+    private function buildSheets(Export $export, ExportSpecParser $parser, FilterApplier $filters): array
     {
-        $events = Event::forVersion((int) $export->version_id)
-            ->orderBy('id')
-            ->lazyById(self::KEYSET_CHUNK);
+        $versionId = (int) $export->version_id;
 
-        foreach ($events as $event) {
-            yield [
-                $event->id,
-                $event->type,
-                optional($event->occurred_at)->toDateTimeString(),
-                $event->payload_language,
-                $event->payload_score,
-            ];
+        $sheets = [];
+        foreach ($parser->parse($export)->sheets() as $spec) {
+            $sheets[] = new GenericSheetBuilder($spec, $versionId, $filters);
         }
+
+        return $sheets;
     }
 
     public function failed(Throwable $e): void

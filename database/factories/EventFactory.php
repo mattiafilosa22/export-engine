@@ -41,4 +41,29 @@ class EventFactory extends Factory
             ],
         ];
     }
+
+    /**
+     * Binds the event to an existing player (and its version), keeping the FK coherent.
+     */
+    public function forPlayer(Player $player): self
+    {
+        return $this->state(function (array $attributes) use ($player): array {
+            return [
+                'version_id' => $player->version_id,
+                'player_id' => $player->id,
+            ];
+        });
+    }
+
+    /**
+     * Sets the hot payload fields (the ones promoted to generated columns).
+     */
+    public function withPayload(string $language, string $utmSource, int $score): self
+    {
+        return $this->state(function (array $attributes) use ($language, $utmSource, $score): array {
+            return [
+                'payload' => ['language' => $language, 'utm_source' => $utmSource, 'score' => $score],
+            ];
+        });
+    }
 }

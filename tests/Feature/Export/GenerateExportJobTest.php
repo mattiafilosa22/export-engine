@@ -6,7 +6,7 @@ use App\Jobs\GenerateExportJob;
 use App\Models\Event;
 use App\Models\Export;
 use App\Models\Version;
-use App\Support\Export\EventXlsxWriter;
+use App\Support\Export\XlsxExportWriter;
 use Exception;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -28,8 +28,8 @@ class GenerateExportJobTest extends TestCase
         ]);
 
         // Dummy writer that fails on write: exercises the catch branch of handle().
-        $this->app->instance(EventXlsxWriter::class, new class extends EventXlsxWriter {
-            public function write(string $absolutePath, iterable $rows, array $header): int
+        $this->app->instance(XlsxExportWriter::class, new class extends XlsxExportWriter {
+            public function write(string $absolutePath, iterable $sheets): int
             {
                 throw new RuntimeException('writer boom');
             }

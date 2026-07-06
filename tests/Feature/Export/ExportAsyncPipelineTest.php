@@ -6,10 +6,7 @@ use App\Jobs\GenerateExportJob;
 use App\Models\Event;
 use App\Models\Export;
 use App\Models\Version;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
-use Tests\TestCase;
 
 /**
  * End-to-end test of the pipeline on the real `database` queue (not sync/fake):
@@ -20,10 +17,8 @@ use Tests\TestCase;
  * under RefreshDatabase, would stay pending (the test transaction never
  * commits): that path is covered separately via Queue::fake in CreateExportTest.
  */
-class ExportAsyncPipelineTest extends TestCase
+class ExportAsyncPipelineTest extends ExportTestCase
 {
-    use RefreshDatabase;
-
     public function test_database_queue_worker_generates_the_xlsx_file(): void
     {
         config(['queue.default' => 'database']);
@@ -45,7 +40,7 @@ class ExportAsyncPipelineTest extends TestCase
             'status' => Export::STATUS_PENDING,
         ]);
 
-        Artisan::call('queue:work', ['--once' => true, '--stop-when-empty' => true]);
+        $this->work();
 
         $this->assertDatabaseCount('jobs', 0);
         $this->assertDatabaseHas('exports', [
