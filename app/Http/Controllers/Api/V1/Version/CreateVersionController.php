@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1;
+namespace App\Http\Controllers\Api\V1\Version;
 
 use App\Actions\Version\CreateVersionAction;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreVersionRequest;
-use App\Http\Resources\VersionResource;
+use App\Http\Requests\Version\StoreVersionRequest;
+use App\Http\Resources\Version\VersionResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 

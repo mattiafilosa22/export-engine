@@ -1,13 +1,13 @@
 <?php
 
-use App\Http\Controllers\Api\V1\CancelExportController;
-use App\Http\Controllers\Api\V1\CreateExportController;
-use App\Http\Controllers\Api\V1\CreateVersionController;
-use App\Http\Controllers\Api\V1\DownloadExportController;
-use App\Http\Controllers\Api\V1\IngestEventsController;
-use App\Http\Controllers\Api\V1\IngestPlayersController;
-use App\Http\Controllers\Api\V1\ShowExportController;
-use App\Http\Controllers\Api\V1\ShowImportController;
+use App\Http\Controllers\Api\V1\Export\CancelExportController;
+use App\Http\Controllers\Api\V1\Export\CreateExportController;
+use App\Http\Controllers\Api\V1\Export\DownloadExportController;
+use App\Http\Controllers\Api\V1\Export\ShowExportController;
+use App\Http\Controllers\Api\V1\Ingestion\IngestEventsController;
+use App\Http\Controllers\Api\V1\Ingestion\IngestPlayersController;
+use App\Http\Controllers\Api\V1\Ingestion\ShowImportController;
+use App\Http\Controllers\Api\V1\Version\CreateVersionController;
 use Illuminate\Support\Facades\Route;
 
 /*

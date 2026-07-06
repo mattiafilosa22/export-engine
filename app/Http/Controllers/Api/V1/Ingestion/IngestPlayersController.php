@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1;
+namespace App\Http\Controllers\Api\V1\Ingestion;
 
-use App\Actions\Import\CreateImportAction;
+use App\Actions\Ingestion\CreateImportAction;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StorePlayersImportRequest;
-use App\Http\Resources\ImportResource;
+use App\Http\Requests\Ingestion\StorePlayersImportRequest;
+use App\Http\Resources\Ingestion\ImportResource;
 use App\Models\Import;
 use App\Models\Version;
 use Illuminate\Http\JsonResponse;

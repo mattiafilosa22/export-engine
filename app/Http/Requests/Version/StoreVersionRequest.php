@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Version;
 
 use App\Models\Version;
 use Illuminate\Foundation\Http\FormRequest;

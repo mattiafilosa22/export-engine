@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Actions\Import\CreateImportAction;
+use App\Actions\Ingestion\CreateImportAction;
 use App\Jobs\IngestEventsJob;
 use App\Jobs\IngestPlayersJob;
 use App\Models\Import;

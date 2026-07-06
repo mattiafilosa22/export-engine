@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Actions\Import;
+namespace App\Actions\Ingestion;
 
 use App\Jobs\IngestEventsJob;
 use App\Jobs\IngestPlayersJob;

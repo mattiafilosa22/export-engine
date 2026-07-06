@@ -84,7 +84,10 @@ class IngestEventsJob extends AbstractIngestJob
         }
 
         // Plain insert (not insertOrIgnore) so the auto-increment ids are
-        // contiguous: each typed record links to firstId + offset.
+        // contiguous: each typed record links to firstId + offset. Contiguity of a
+        // single bulk INSERT under concurrent writers relies on
+        // innodb_autoinc_lock_mode=1 (pinned in docker-compose.yml / CI; MySQL 8
+        // defaults to 2/interleaved).
         Event::insert($this->eventRows($versionId, $new, $now));
         $firstId = (int) DB::getPdo()->lastInsertId();
 

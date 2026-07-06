@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1;
+namespace App\Http\Controllers\Api\V1\Ingestion;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\ImportResource;
+use App\Http\Resources\Ingestion\ImportResource;
 use App\Models\Import;
 
 /**

@@ -63,8 +63,11 @@ services:
 
   db:
     image: mysql:8.0
-    # native_password avoids the caching_sha2 friction with PHP 7.3 mysqlnd
-    command: --default-authentication-plugin=mysql_native_password
+    # native_password avoids the caching_sha2 friction with PHP 7.3 mysqlnd.
+    # lock-mode=1 (consecutive) guarantees a single bulk INSERT gets a contiguous
+    # id block even under concurrent writers — the events ingestion links typed
+    # records via firstId+offset (see IngestEventsJob). MySQL 8 defaults to 2.
+    command: --default-authentication-plugin=mysql_native_password --innodb-autoinc-lock-mode=1
     environment:
       MYSQL_DATABASE: gamindo
       MYSQL_USER: gamindo

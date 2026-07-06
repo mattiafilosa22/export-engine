@@ -18,7 +18,7 @@ jobs:
             -e MYSQL_ROOT_PASSWORD=root \
             -e MYSQL_DATABASE=gamindo_test \
             -p 3306:3306 \
-            mysql:8.0 --default-authentication-plugin=mysql_native_password
+            mysql:8.0 --default-authentication-plugin=mysql_native_password --innodb-autoinc-lock-mode=1
           echo "Waiting for MySQL to be ready..."
           for i in $(seq 1 30); do
             if docker exec mysql mysqladmin ping -h localhost -uroot -proot --silent; then

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1;
+namespace App\Http\Controllers\Api\V1\Export;
 
 use App\Actions\Export\CreateExportAction;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreExportRequest;
-use App\Http\Resources\ExportResource;
+use App\Http\Requests\Export\StoreExportRequest;
+use App\Http\Resources\Export\ExportResource;
 use App\Models\Version;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1;
+namespace App\Http\Controllers\Api\V1\Export;
 
 use App\Actions\Export\CancelExportAction;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\ExportResource;
+use App\Http\Resources\Export\ExportResource;
 use App\Models\Export;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
