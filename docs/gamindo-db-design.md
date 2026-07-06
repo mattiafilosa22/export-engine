@@ -150,7 +150,7 @@ aggiornare milioni di righe. Qui invece l'opzione è definita **una volta**, e `
 
 | Campo | Tipo | Null | Perché (tipo + concetto) |
 |---|---|---|---|
-| `id` | BIGINT UNSIGNED, PK, AI | no | Referenziata da `answers.option_id`. |
+| `id` | BIGINT UNSIGNED, PK, AI | no | Referenziata da `answers.answer_option_id`. |
 | `version_id` | BIGINT UNSIGNED, FK→versions | no | Scope. |
 | `question_id` | BIGINT UNSIGNED, FK→questions | no | A quale domanda appartiene. |
 | `code` | VARCHAR(20) | sì | Codice opzione ("A", "B") se serve. |
@@ -170,7 +170,7 @@ SELECT q.code AS question_id, q.text AS question, o.label AS answer,
        COUNT(a.id) / NULLIF(SUM(COUNT(a.id)) OVER (PARTITION BY q.code),0) AS percentage
 FROM questions q
 JOIN answer_options o ON o.question_id = q.id
-LEFT JOIN answers a   ON a.option_id = o.id
+LEFT JOIN answers a   ON a.answer_option_id = o.id
                      AND a.occurred_at BETWEEN :from AND :to
 WHERE q.version_id = :versionId
 GROUP BY q.code, q.text, o.label, o.position
@@ -181,7 +181,7 @@ ORDER BY q.code, o.position;
 
 ## 7. `answers` — le risposte date (fact per-domanda)
 
-**Concetto:** cosa ha scelto ciascun player. Per le domande chiuse punta all'opzione via `option_id`
+**Concetto:** cosa ha scelto ciascun player. Per le domande chiuse punta all'opzione via `answer_option_id`
 (integrità + niente testo duplicato); per le aperte usa `answer_text`. Legata all'evento via `event_id`.
 
 | Campo | Tipo | Null | Perché (tipo + concetto) |
@@ -191,13 +191,13 @@ ORDER BY q.code, o.position;
 | `player_id` | BIGINT UNSIGNED | no | Chi ha risposto. |
 | `event_id` | BIGINT UNSIGNED, FK→events | sì | Aggancio alla timeline. |
 | `question_id` | BIGINT UNSIGNED, FK→questions | no | Quale domanda. |
-| `option_id` | BIGINT UNSIGNED, FK→answer_options | sì | **L'opzione scelta** (domande chiuse). NULL per le aperte. |
+| `answer_option_id` | BIGINT UNSIGNED, FK→answer_options | sì | **L'opzione scelta** (domande chiuse). NULL per le aperte. (Nome reale della colonna; nel design iniziale era `option_id`.) |
 | `answer_text` | VARCHAR(500) | sì | Testo libero (domande aperte). NULL per le chiuse. |
 | `occurred_at` | DATETIME | no | Quando data. Per filtri temporali. |
 | `created_at` | DATETIME | no | Audit. |
 
 **Vincoli/indici:** `UNIQUE(version_id, player_id, question_id)` → **una risposta per domanda** (regola
-del single_choice; per multiple_choice si rimuove). Indice `(version_id, question_id, option_id)` per
+del single_choice; per multiple_choice si rimuove). Indice `(version_id, question_id, answer_option_id)` per
 l'aggregazione di distribuzione. La correttezza si deriva da `answer_options.is_correct` via join.
 
 ---
@@ -314,7 +314,7 @@ users (1) ──< (N) players (N) >── (1) versions
                           └───┐         │
                       (N) answers >─────┘  (answers.event_id → events, opzionale)
                               │
-                    answers.option_id → answer_options
+                    answers.answer_option_id → answer_options
                     answers.question_id → questions
 ```
 
@@ -353,7 +353,7 @@ DB::transaction(function () use ($player, $questionId, $optionId) {
         'player_id'   => $player->id,
         'event_id'    => $event->id,
         'question_id' => $questionId,
-        'option_id'   => $optionId,          // punta a answer_options
+        'answer_option_id' => $optionId,     // punta a answer_options
         'occurred_at' => $event->occurred_at,
     ]);
 });

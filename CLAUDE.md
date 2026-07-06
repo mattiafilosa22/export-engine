@@ -56,7 +56,7 @@ Le 3 decisioni chiave da rispettare:
 2. Split **identità/partecipazione**: `users` (email unica) + `players` (grain per-versione, con
    `total_score` denormalizzato).
 3. Opzioni di risposta come entità (`answer_options`), non stringhe sparse; `answers` referenzia
-   l'opzione via `option_id`.
+   l'opzione via `answer_option_id`.
 
 Scritture correlate (evento+risposta, evento+score, setup campagna) sempre in `DB::transaction`.
 
