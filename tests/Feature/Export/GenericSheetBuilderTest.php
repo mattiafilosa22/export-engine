@@ -63,6 +63,36 @@ class GenericSheetBuilderTest extends ExportTestCase
         $this->assertSame(100, $rows[0][2]);
     }
 
+    public function test_count_returns_the_row_count_of_a_detail_sheet(): void
+    {
+        $version = Version::factory()->create();
+        $player = Player::factory()->create(['version_id' => $version->id]);
+        Event::factory()->forPlayer($player)->count(3)->create();
+
+        $spec = new SheetSpec('Detail', 'events', [SheetColumn::plain('id', 'id')]);
+        $builder = new GenericSheetBuilder($spec, (int) $version->id, new FilterApplier());
+
+        $this->assertSame(3, $builder->count());
+    }
+
+    public function test_count_returns_the_number_of_groups_for_an_aggregate_sheet(): void
+    {
+        $version = Version::factory()->create();
+        $player = Player::factory()->create(['version_id' => $version->id]);
+        Event::factory()->forPlayer($player)->create(['type' => 'game_completed']);
+        Event::factory()->forPlayer($player)->create(['type' => 'game_completed']);
+        Event::factory()->forPlayer($player)->create(['type' => 'answer_submitted']);
+
+        $spec = new SheetSpec('Summary', 'events', [
+            SheetColumn::plain('type', 'type'),
+            SheetColumn::aggregate(null, 'count', 'c'),
+        ], [], ['type']);
+        $builder = new GenericSheetBuilder($spec, (int) $version->id, new FilterApplier());
+
+        // Two distinct types => two groups.
+        $this->assertSame(2, $builder->count());
+    }
+
     /**
      * @return array<int, array<int, scalar|null>>
      */

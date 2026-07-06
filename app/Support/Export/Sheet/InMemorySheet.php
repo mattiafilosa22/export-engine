@@ -48,4 +48,9 @@ final class InMemorySheet implements Sheet
     {
         return $this->rows;
     }
+
+    public function count(): int
+    {
+        return count($this->rows);
+    }
 }

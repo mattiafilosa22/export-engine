@@ -81,6 +81,15 @@ class Export extends Model
     }
 
     /**
+     * Deterministic path of the export file on the storage disk (derived from the
+     * uuid), independent of whether it has been written yet.
+     */
+    public function relativeFilePath(): string
+    {
+        return 'exports/' . $this->uuid . '.xlsx';
+    }
+
+    /**
      * Marks the start of processing by the worker.
      */
     public function markProcessing(): void
@@ -113,6 +122,16 @@ class Export extends Model
     {
         $this->status = self::STATUS_FAILED;
         $this->error_message = $errorMessage;
+        $this->completed_at = now();
+        $this->save();
+    }
+
+    /**
+     * Marks a cooperative cancellation (terminal, no retry).
+     */
+    public function markCancelled(): void
+    {
+        $this->status = self::STATUS_CANCELLED;
         $this->completed_at = now();
         $this->save();
     }

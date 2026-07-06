@@ -79,6 +79,32 @@ class GenericSheetBuilder implements Sheet
         }
     }
 
+    /**
+     * Expected number of output rows (for the progress total), with the same
+     * joins/filters as rows(): a plain detail sheet counts rows; an aggregate
+     * sheet without group_by is a single row; a grouped sheet counts groups.
+     */
+    public function count(): int
+    {
+        $groupBy = $this->spec->groupBy();
+
+        if (! $this->spec->hasAggregates() && $groupBy === []) {
+            return (int) $this->baseQuery()->count();
+        }
+
+        if ($groupBy === []) {
+            return 1;
+        }
+
+        $query = $this->baseQuery();
+        foreach ($groupBy as $alias) {
+            $real = $this->compiler->realField($alias);
+            $query->addSelect($real)->groupBy($real);
+        }
+
+        return (int) $query->getQuery()->getCountForPagination();
+    }
+
     private function baseQuery(): Builder
     {
         /** @var class-string<\Illuminate\Database\Eloquent\Model> $model */

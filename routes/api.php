@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\CancelExportController;
 use App\Http\Controllers\Api\V1\CreateExportController;
 use App\Http\Controllers\Api\V1\DownloadExportController;
 use App\Http\Controllers\Api\V1\IngestEventsController;
@@ -26,5 +27,6 @@ Route::prefix('v1')->group(function () {
     // Export.
     Route::post('versions/{version}/exports', CreateExportController::class)->name('exports.store');
     Route::get('exports/{export}', ShowExportController::class)->name('exports.show');
+    Route::post('exports/{export}/cancel', CancelExportController::class)->name('exports.cancel');
     Route::get('exports/{export}/download', DownloadExportController::class)->name('exports.download');
 });

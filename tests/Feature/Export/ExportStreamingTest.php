@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\Export;
 use App\Models\Player;
 use App\Models\Version;
+use App\Support\Export\ExportState;
 use Illuminate\Support\Facades\Storage;
 
 class ExportStreamingTest extends ExportTestCase
@@ -29,6 +30,8 @@ class ExportStreamingTest extends ExportTestCase
         $this->assertSame(3, $export->total_rows);
         $this->assertSame(3, $export->processed_rows);
         $this->assertSame(100, $export->progress);
+        // The volatile live-progress state is cleared on completion.
+        $this->assertNull($this->app->make(ExportState::class)->progress($export->uuid));
     }
 
     public function test_generation_memory_does_not_scale_with_row_count(): void

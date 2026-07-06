@@ -19,4 +19,9 @@ interface Sheet
      * @return iterable<int, array<int, scalar|null>>
      */
     public function rows(): iterable;
+
+    /**
+     * Number of data rows the sheet will produce (used for the progress total).
+     */
+    public function count(): int;
 }

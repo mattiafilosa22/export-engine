@@ -4,18 +4,15 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Export;
-use Illuminate\Contracts\Filesystem\Factory as FilesystemFactory;
-use Illuminate\Filesystem\FilesystemAdapter;
+use App\Support\Export\ExportStorage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Serves the generated XLSX file. Guard clause: 409 if not `completed`,
- * 404 if the domain file is missing on disk.
+ * 404 if the file is missing on disk.
  */
 class DownloadExportController extends Controller
 {
-    private const CONTENT_TYPE_XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-
     /**
      * Download an export file
      *
@@ -28,24 +25,16 @@ class DownloadExportController extends Controller
      * @response 409 {"message":"Export is not completed."}
      * @response 404 {"message":"Export file not found."}
      */
-    public function __invoke(Export $export, FilesystemFactory $filesystem): StreamedResponse
+    public function __invoke(Export $export, ExportStorage $storage): StreamedResponse
     {
         if (! $export->isCompleted()) {
             abort(409, 'Export is not completed.');
         }
 
-        $disk = $filesystem->disk('local');
-
-        if (! $disk instanceof FilesystemAdapter) {
-            abort(500, 'Export disk is not available.');
-        }
-
-        if ($export->file_path === null || ! $disk->exists($export->file_path)) {
+        if (! $storage->exists($export)) {
             abort(404, 'Export file not found.');
         }
 
-        return $disk->download($export->file_path, "export-{$export->uuid}.xlsx", [
-            'Content-Type' => self::CONTENT_TYPE_XLSX,
-        ]);
+        return $storage->download($export);
     }
 }
