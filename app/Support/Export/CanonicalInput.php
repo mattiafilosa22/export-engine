@@ -44,4 +44,26 @@ final class CanonicalInput
             ? substr($value, strlen(self::PAYLOAD_PREFIX))
             : $value;
     }
+
+    /**
+     * Normalizes a sort entry — a "column:direction" string or a
+     * {column, direction} object — to an aliased column and a lowercased
+     * direction. The direction is NOT coerced to asc/desc here, so validation
+     * can still reject an invalid one; the parser coerces it afterwards.
+     *
+     * @param mixed $entry
+     * @return array{column: string, direction: string}
+     */
+    public static function sortEntry($entry): array
+    {
+        if (is_string($entry)) {
+            $parts = explode(':', $entry, 2);
+            return ['column' => self::alias($parts[0]), 'direction' => strtolower($parts[1] ?? 'asc')];
+        }
+
+        $entry = (array) $entry;
+        $column = isset($entry['column']) ? self::alias((string) $entry['column']) : '';
+
+        return ['column' => $column, 'direction' => strtolower((string) ($entry['direction'] ?? 'asc'))];
+    }
 }
