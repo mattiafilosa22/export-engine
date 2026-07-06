@@ -114,7 +114,11 @@ class GenerateExportJob implements ShouldQueue
         $disk->makeDirectory(self::EXPORT_DIR);
         $relativePath = self::EXPORT_DIR . '/' . $export->uuid . '.xlsx';
 
-        $rows = $writer->write($disk->path($relativePath), $this->buildSheets($export, $parser, $filters));
+        $rows = $writer->write(
+            $disk->path($relativePath),
+            $this->buildSheets($export, $parser, $filters),
+            $this->progressCallback($export)
+        );
 
         $export->total_rows = $rows;
         $export->processed_rows = $rows;
@@ -137,6 +141,17 @@ class GenerateExportJob implements ShouldQueue
         }
 
         return $sheets;
+    }
+
+    /**
+     * Durable, throttled progress: persists the running row count as the stream
+     * advances (lightweight UPDATE by id, no model events / timestamps touched).
+     */
+    private function progressCallback(Export $export): callable
+    {
+        return function (int $written) use ($export): void {
+            Export::where('id', $export->id)->update(['processed_rows' => $written]);
+        };
     }
 
     public function failed(Throwable $e): void

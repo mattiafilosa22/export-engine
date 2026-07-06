@@ -14,13 +14,19 @@ class XlsxExportWriter
 {
     private const MAX_SHEET_NAME = 31;
 
+    // How often (in data rows) the progress callback is invoked while streaming.
+    private const PROGRESS_INTERVAL = 1000;
+
     /**
      * Writes every sheet (name, header, streamed rows) and returns the total
-     * number of data rows written across all sheets.
+     * number of data rows written across all sheets. If provided, `$onProgress`
+     * is called with the cumulative row count every PROGRESS_INTERVAL rows, so
+     * the caller can persist advancement without breaking the constant-memory stream.
      *
      * @param iterable<int, Sheet> $sheets
+     * @param callable(int): void|null $onProgress
      */
-    public function write(string $absolutePath, iterable $sheets): int
+    public function write(string $absolutePath, iterable $sheets, ?callable $onProgress = null): int
     {
         $writer = WriterEntityFactory::createXLSXWriter();
         $writer->openToFile($absolutePath);
@@ -39,6 +45,10 @@ class XlsxExportWriter
                 foreach ($sheet->rows() as $row) {
                     $writer->addRow(WriterEntityFactory::createRowFromArray($this->normalize($row)));
                     $count++;
+
+                    if ($onProgress !== null && $count % self::PROGRESS_INTERVAL === 0) {
+                        $onProgress($count);
+                    }
                 }
             }
         } finally {

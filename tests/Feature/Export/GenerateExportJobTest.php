@@ -29,7 +29,7 @@ class GenerateExportJobTest extends TestCase
 
         // Dummy writer that fails on write: exercises the catch branch of handle().
         $this->app->instance(XlsxExportWriter::class, new class extends XlsxExportWriter {
-            public function write(string $absolutePath, iterable $sheets): int
+            public function write(string $absolutePath, iterable $sheets, ?callable $onProgress = null): int
             {
                 throw new RuntimeException('writer boom');
             }

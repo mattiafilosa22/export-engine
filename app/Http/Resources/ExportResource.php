@@ -25,6 +25,7 @@ class ExportResource extends JsonResource
             'format' => $this->format,
             'progress' => (int) $this->progress,
             'total_rows' => $this->total_rows,
+            'processed_rows' => (int) $this->processed_rows,
             'file_size' => $this->file_size,
             'error_message' => $this->error_message,
             'created_at' => optional($this->created_at)->toIso8601String(),

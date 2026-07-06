@@ -33,6 +33,33 @@ class XlsxExportWriterTest extends TestCase
         }
     }
 
+    public function test_it_reports_cumulative_progress_every_interval_rows(): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'xlsx_') . '.xlsx';
+
+        try {
+            $rows = [];
+            for ($i = 0; $i < 2500; $i++) {
+                $rows[] = [$i];
+            }
+
+            $calls = [];
+            $written = (new XlsxExportWriter())->write(
+                $path,
+                [new InMemorySheet('Big', ['n'], $rows)],
+                function (int $count) use (&$calls): void {
+                    $calls[] = $count;
+                }
+            );
+
+            $this->assertSame(2500, $written);
+            // Callback fires every 1000 rows with the cumulative count.
+            $this->assertSame([1000, 2000], $calls);
+        } finally {
+            @unlink($path);
+        }
+    }
+
     public function test_it_disambiguates_duplicate_sheet_names(): void
     {
         $path = tempnam(sys_get_temp_dir(), 'xlsx_') . '.xlsx';

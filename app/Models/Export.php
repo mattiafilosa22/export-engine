@@ -42,6 +42,7 @@ class Export extends Model
         'created_at' => 'datetime',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
+        'progress' => 'integer',
         'total_rows' => 'integer',
         'processed_rows' => 'integer',
         'file_size' => 'integer',
@@ -98,6 +99,7 @@ class Export extends Model
         $this->status = self::STATUS_COMPLETED;
         $this->total_rows = $rows;
         $this->processed_rows = $rows;
+        $this->progress = 100;
         $this->file_path = $filePath;
         $this->file_size = $fileSize;
         $this->completed_at = now();

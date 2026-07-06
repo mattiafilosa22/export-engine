@@ -6,6 +6,7 @@ use App\Models\Event;
 use App\Models\Player;
 use App\Models\Version;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @extends Factory<Event>
@@ -65,5 +66,36 @@ class EventFactory extends Factory
                 'payload' => ['language' => $language, 'utm_source' => $utmSource, 'score' => $score],
             ];
         });
+    }
+
+    /**
+     * Fast chunked bulk insert of identical events for a version+player, for the
+     * volumes (benchmark/streaming tests) where per-model creation is too slow.
+     */
+    public function bulkInsert(int $versionId, int $playerId, int $count, int $chunk = 2000): void
+    {
+        $now = now()->toDateTimeString();
+        $payload = (string) json_encode(['language' => 'it', 'utm_source' => 'linkedin', 'score' => 100]);
+
+        $rows = [];
+        for ($i = 0; $i < $count; $i++) {
+            $rows[] = [
+                'version_id' => $versionId,
+                'player_id' => $playerId,
+                'type' => Event::TYPE_GAME_COMPLETED,
+                'occurred_at' => $now,
+                'payload' => $payload,
+                'created_at' => $now,
+            ];
+
+            if (count($rows) === $chunk) {
+                DB::table('events')->insert($rows);
+                $rows = [];
+            }
+        }
+
+        if ($rows !== []) {
+            DB::table('events')->insert($rows);
+        }
     }
 }
