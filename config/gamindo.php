@@ -126,6 +126,8 @@ return [
         'sheet_source_map' => [
             'players' => 'players',
             'events_summary' => 'events',
+            'answers' => 'answers',
+            'transactions' => 'transactions',
         ],
 
         // Named metric => aggregate column (fn + optional field). The metric
@@ -201,6 +203,63 @@ return [
                     'avg' => ['total_score'],
                 ],
                 'sort' => ['player_id', 'registered_at', 'total_score'],
+            ],
+
+            // Typed record derived from answer_submitted events (Slice 7). No join
+            // needed: version_id/id are plain columns, so version_column/key default.
+            'answers' => [
+                'model' => \App\Models\Answer::class,
+                'fields' => [
+                    'id' => 'id',
+                    'player_id' => 'player_id',
+                    'question_id' => 'question_id',
+                    'answer_option_id' => 'answer_option_id',
+                    'answer_text' => 'answer_text',
+                    'occurred_at' => 'occurred_at',
+                ],
+                'default_columns' => ['id', 'player_id', 'question_id', 'answer_option_id', 'answer_text', 'occurred_at'],
+                'filters' => [
+                    'question_id' => ['column' => 'question_id', 'op' => 'in'],
+                    'answer_option_id' => ['column' => 'answer_option_id', 'op' => 'in'],
+                    'occurred_from' => ['column' => 'occurred_at', 'op' => 'gte'],
+                    'occurred_to' => ['column' => 'occurred_at', 'op' => 'lte'],
+                ],
+                'aggregatable' => [
+                    'count' => ['*'],
+                    'count_distinct' => ['player_id', 'question_id', 'answer_option_id'],
+                ],
+                'sort' => ['id', 'occurred_at'],
+            ],
+
+            // Typed record derived from transactional events (Slice 7).
+            'transactions' => [
+                'model' => \App\Models\Transaction::class,
+                'fields' => [
+                    'id' => 'id',
+                    'player_id' => 'player_id',
+                    'type' => 'type',
+                    'amount' => 'amount',
+                    'currency' => 'currency',
+                    'status' => 'status',
+                    'external_ref' => 'external_ref',
+                    'occurred_at' => 'occurred_at',
+                ],
+                'default_columns' => ['id', 'player_id', 'type', 'amount', 'currency', 'status', 'occurred_at'],
+                'filters' => [
+                    'type' => ['column' => 'type', 'op' => 'in'],
+                    'status' => ['column' => 'status', 'op' => 'in'],
+                    'occurred_from' => ['column' => 'occurred_at', 'op' => 'gte'],
+                    'occurred_to' => ['column' => 'occurred_at', 'op' => 'lte'],
+                ],
+                'aggregatable' => [
+                    'count' => ['*'],
+                    'count_distinct' => ['player_id'],
+                    'sum' => ['amount'],
+                    'avg' => ['amount'],
+                    'min' => ['amount'],
+                    'max' => ['amount'],
+                ],
+                'sort' => ['id', 'occurred_at', 'amount'],
             ],
 
         ],

@@ -1,0 +1,14 @@
+{
+    "players": [
+        { "email": "qa.player1@example.com", "external_id": "ext-qa-1", "registered_at": "2026-01-01T10:00:00Z", "language": "it" },
+        { "email": "qa.player2@example.com", "external_id": "ext-qa-2", "registered_at": "2026-01-01T10:01:00Z", "language": "en" },
+        { "email": "qa.player3@example.com", "external_id": "ext-qa-3", "registered_at": "2026-01-01T10:02:00Z", "language": "es" },
+        { "email": "qa.player4@example.com", "external_id": "ext-qa-4", "registered_at": "2026-01-01T10:03:00Z", "language": "fr" },
+        { "email": "qa.player5@example.com", "language": "it" },
+        { "email": "qa.player6@example.com" },
+        { "email": "qa.player7@example.com", "external_id": "ext-qa-7", "registered_at": "2026-01-02T09:00:00Z", "language": "it" },
+        { "email": "qa.player8@example.com", "external_id": "ext-qa-8", "registered_at": "2026-01-02T09:05:00Z", "language": "en" },
+        { "email": "qa.player9@example.com", "external_id": "ext-qa-9", "registered_at": "2026-01-02T09:10:00Z", "language": "it" },
+        { "email": "qa.player10@example.com", "external_id": "ext-qa-10", "registered_at": "2026-01-02T09:15:00Z", "language": "it" }
+    ]
+}

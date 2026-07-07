@@ -1,0 +1,13 @@
+{
+    "_comment": "Each row violates exactly one StoreEventsImportRequest rule (see _violation). Expect 422 with one error per row, addressed as events.<index>.<field>.",
+    "events": [
+        { "_violation": "player_id missing (required)", "type": "opened", "occurred_at": "2026-01-01T10:00:00Z" },
+        { "_violation": "player_id not an integer", "player_id": "abc", "type": "opened", "occurred_at": "2026-01-01T10:00:00Z" },
+        { "_violation": "type missing (required)", "player_id": 1, "occurred_at": "2026-01-01T10:00:00Z" },
+        { "_violation": "type > 40 chars", "player_id": 1, "type": "this_event_type_name_is_way_too_long_to_be_valid", "occurred_at": "2026-01-01T10:00:00Z" },
+        { "_violation": "occurred_at missing (required)", "player_id": 1, "type": "opened" },
+        { "_violation": "occurred_at not a date", "player_id": 1, "type": "opened", "occurred_at": "not-a-date" },
+        { "_violation": "payload not an array", "player_id": 1, "type": "opened", "occurred_at": "2026-01-01T10:00:00Z", "payload": "not-an-object" },
+        { "_violation": "player_email malformed", "player_id": 1, "player_email": "not-an-email", "type": "opened", "occurred_at": "2026-01-01T10:00:00Z" }
+    ]
+}

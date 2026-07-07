@@ -1,0 +1,4 @@
+{
+    "_comment": "Violates 'players' => min:1. Expect 422 on the players field itself.",
+    "players": []
+}

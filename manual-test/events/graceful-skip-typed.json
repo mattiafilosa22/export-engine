@@ -1,0 +1,10 @@
+{
+    "_comment": "These rows are ALL boundary-valid (expect 202) AND their player resolves correctly (run players/valid.json first: qa.player1..10@example.com; player_id is a fake placeholder, resolution happens via player_email). But their payload is missing/invalid for the typed_records mapping in config/gamindo.php, so the correlated answers/transactions/rewards row is skipped gracefully (logged as import.events.typed_skipped) without failing the batch or the event itself. See _reason for what each row is missing.",
+    "events": [
+        { "_reason": "answer_submitted without question_id (required)", "player_id": 999000101, "player_email": "qa.player1@example.com", "type": "answer_submitted", "occurred_at": "2026-01-01T11:00:00Z", "dedup_key": "qa-skip-1", "payload": { "answer_option_id": 1 } },
+        { "_reason": "answer_submitted with question_id but neither answer_option_id nor answer_text (require_any)", "player_id": 999000102, "player_email": "qa.player2@example.com", "type": "answer_submitted", "occurred_at": "2026-01-01T11:01:00Z", "dedup_key": "qa-skip-2", "payload": { "question_id": 1 } },
+        { "_reason": "transaction without amount (required)", "player_id": 999000103, "player_email": "qa.player3@example.com", "type": "transaction", "occurred_at": "2026-01-01T11:02:00Z", "dedup_key": "qa-skip-3", "payload": { "type": "purchase", "currency": "EUR" } },
+        { "_reason": "transaction with a type outside one_of (purchase/spend/refund)", "player_id": 999000104, "player_email": "qa.player4@example.com", "type": "transaction", "occurred_at": "2026-01-01T11:03:00Z", "dedup_key": "qa-skip-4", "payload": { "type": "bonus", "amount": 5, "currency": "EUR" } },
+        { "_reason": "reward_granted without reward_type (required)", "player_id": 999000105, "player_email": "qa.player5@example.com", "type": "reward_granted", "occurred_at": "2026-01-01T11:04:00Z", "dedup_key": "qa-skip-5", "payload": { "reward_code": "NOPE" } }
+    ]
+}

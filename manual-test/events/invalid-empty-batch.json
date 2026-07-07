@@ -1,0 +1,4 @@
+{
+    "_comment": "Violates 'events' => min:1. Expect 422 on the events field itself.",
+    "events": []
+}

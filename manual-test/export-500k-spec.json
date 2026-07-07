@@ -1,0 +1,35 @@
+{
+    "date_from": "2026-06-07",
+    "date_to": "2026-07-07",
+    "sheets": [
+        {
+            "name": "Players",
+            "source": "players",
+            "columns": ["player_id", "email", "registered_at", "total_score"],
+            "filters": { "language": "it" },
+            "sort": ["total_score:desc"]
+        },
+        {
+            "name": "Events_Summary",
+            "source": "events",
+            "group_by": ["type", "payload.language"],
+            "metrics": ["count", "unique_players", "avg_score"]
+        },
+        {
+            "name": "Events_Detail",
+            "source": "events",
+            "columns": ["id", "type", "occurred_at", "language", "score"],
+            "filters": { "language": "it" }
+        },
+        {
+            "name": "Answers",
+            "source": "answers"
+        },
+        {
+            "name": "Transactions",
+            "source": "transactions",
+            "filters": { "status": "completed" },
+            "sort": ["occurred_at:desc"]
+        }
+    ]
+}

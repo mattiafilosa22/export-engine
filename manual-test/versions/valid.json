@@ -1,0 +1,8 @@
+{
+    "name": "QA Load Test 2026-07",
+    "client_name": "Acme Inc.",
+    "status": "active",
+    "starts_at": "2026-06-01",
+    "ends_at": "2026-08-31",
+    "config": { "theme": "dark", "max_players": 1000000 }
+}

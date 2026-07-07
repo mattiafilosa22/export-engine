@@ -1,0 +1,117 @@
+{
+    "_comment": "player_id is REQUIRED but its numeric value here is a deliberately-fake placeholder (999000001+) that will never match a real player. Real resolution happens via player_email, which must match a player already imported for this version (run players/valid.json first: qa.player1..10@example.com). answer_submitted rows reference question_id/answer_option_id 1 \u2014 only produce a row in `answers` if those ids exist in the target version (see manual-test/README.md); otherwise the event is still stored and the typed row is gracefully skipped.",
+    "events": [
+        {
+            "player_id": 999000001,
+            "player_email": "qa.player1@example.com",
+            "type": "opened",
+            "occurred_at": "2026-01-01T10:00:00Z",
+            "dedup_key": "qa-evt-1",
+            "payload": {
+                "language": "it",
+                "utm_source": "linkedin"
+            }
+        },
+        {
+            "player_id": 999000002,
+            "player_email": "qa.player2@example.com",
+            "type": "registered",
+            "occurred_at": "2026-01-01T10:01:00Z",
+            "dedup_key": "qa-evt-2",
+            "payload": {
+                "language": "en",
+                "utm_source": "google"
+            }
+        },
+        {
+            "player_id": 999000003,
+            "player_email": "qa.player3@example.com",
+            "type": "game_completed",
+            "occurred_at": "2026-01-01T10:02:00Z",
+            "dedup_key": "qa-evt-3",
+            "payload": {
+                "language": "es",
+                "score": 87
+            }
+        },
+        {
+            "player_id": 999000004,
+            "player_email": "qa.player4@example.com",
+            "type": "answer_submitted",
+            "occurred_at": "2026-01-01T10:03:00Z",
+            "dedup_key": "qa-evt-4",
+            "payload": {
+                "question_id": 1,
+                "answer_option_id": 1
+            }
+        },
+        {
+            "player_id": 999000005,
+            "player_email": "qa.player5@example.com",
+            "type": "answer_submitted",
+            "occurred_at": "2026-01-01T10:04:00Z",
+            "dedup_key": "qa-evt-5",
+            "payload": {
+                "question_id": 1,
+                "answer_text": "Free text answer"
+            }
+        },
+        {
+            "player_id": 999000006,
+            "player_email": "qa.player6@example.com",
+            "type": "transaction",
+            "occurred_at": "2026-01-01T10:05:00Z",
+            "dedup_key": "qa-evt-6",
+            "payload": {
+                "type": "purchase",
+                "amount": 19.99,
+                "currency": "EUR"
+            }
+        },
+        {
+            "player_id": 999000007,
+            "player_email": "qa.player7@example.com",
+            "type": "transaction",
+            "occurred_at": "2026-01-01T10:06:00Z",
+            "dedup_key": "qa-evt-7",
+            "payload": {
+                "type": "refund",
+                "amount": 5,
+                "currency": "EUR",
+                "status": "pending"
+            }
+        },
+        {
+            "player_id": 999000008,
+            "player_email": "qa.player8@example.com",
+            "type": "reward_granted",
+            "occurred_at": "2026-01-01T10:07:00Z",
+            "dedup_key": "qa-evt-8",
+            "payload": {
+                "reward_type": "coupon",
+                "reward_code": "QA10"
+            }
+        },
+        {
+            "player_id": 999000009,
+            "player_email": "qa.player9@example.com",
+            "type": "level_completed",
+            "occurred_at": "2026-01-01T10:08:00Z",
+            "dedup_key": "qa-evt-9",
+            "payload": {
+                "language": "it",
+                "level": 3
+            }
+        },
+        {
+            "player_id": 999000010,
+            "player_email": "qa.player10@example.com",
+            "type": "opened",
+            "occurred_at": "2026-01-01T10:09:00Z",
+            "payload": {
+                "language": "it",
+                "utm_source": "direct"
+            }
+        }
+    ]
+}

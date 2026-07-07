@@ -1,0 +1,10 @@
+{
+    "_comment": "Each row violates exactly one StorePlayersImportRequest rule (see _violation). Expect 422 with one error per row, addressed as players.<index>.<field>.",
+    "players": [
+        { "_violation": "email missing (required)", "external_id": "ext-bad-1" },
+        { "_violation": "email malformed", "email": "not-an-email" },
+        { "_violation": "external_id > 100 chars", "email": "qa.bad3@example.com", "external_id": "X-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" },
+        { "_violation": "registered_at not a date", "email": "qa.bad4@example.com", "registered_at": "not-a-date" },
+        { "_violation": "language > 8 chars", "email": "qa.bad5@example.com", "language": "too-long-lang-code" }
+    ]
+}
