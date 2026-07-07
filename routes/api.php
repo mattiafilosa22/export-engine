@@ -5,8 +5,11 @@ use App\Http\Controllers\Api\V1\Export\CreateExportController;
 use App\Http\Controllers\Api\V1\Export\DownloadExportController;
 use App\Http\Controllers\Api\V1\Export\ShowExportController;
 use App\Http\Controllers\Api\V1\Export\PreviewExportController;
+use App\Http\Controllers\Api\V1\Ingestion\IngestAnswersController;
 use App\Http\Controllers\Api\V1\Ingestion\IngestEventsController;
 use App\Http\Controllers\Api\V1\Ingestion\IngestPlayersController;
+use App\Http\Controllers\Api\V1\Ingestion\IngestRewardsController;
+use App\Http\Controllers\Api\V1\Ingestion\IngestTransactionsController;
 use App\Http\Controllers\Api\V1\Ingestion\ListPlayersController;
 use App\Http\Controllers\Api\V1\Ingestion\ShowImportController;
 use App\Http\Controllers\Api\V1\Version\CreateVersionController;
@@ -30,6 +33,12 @@ Route::prefix('v1')->middleware('api.key')->group(function () {
     Route::post('versions/{version}/players', IngestPlayersController::class)->name('imports.players.store');
     Route::get('versions/{version}/players', ListPlayersController::class)->name('players.index');
     Route::post('versions/{version}/events', IngestEventsController::class)->name('imports.events.store');
+    // Direct ingestion for transactions/answers/rewards — safety-net alternative
+    // to the event-driven typed records (Slice 7): same idempotent batch shape.
+    Route::post('versions/{version}/transactions', IngestTransactionsController::class)
+        ->name('imports.transactions.store');
+    Route::post('versions/{version}/answers', IngestAnswersController::class)->name('imports.answers.store');
+    Route::post('versions/{version}/rewards', IngestRewardsController::class)->name('imports.rewards.store');
     Route::get('imports/{import}', ShowImportController::class)->name('imports.show');
 
     // Export.

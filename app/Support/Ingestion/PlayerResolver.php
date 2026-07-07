@@ -62,4 +62,55 @@ class PlayerResolver
 
         return $valid;
     }
+
+    /**
+     * Two-phase batch lookup for a whole chunk: gathers every candidate
+     * player_id/player_email up front (2 queries total, not one per row) and
+     * returns the maps resolveRow() needs.
+     *
+     * @param array<int, array<string, mixed>> $chunk
+     * @return array{0: array<int, bool>, 1: array<string, int>} [validIds, playerByEmail]
+     */
+    public function candidatesFor(int $versionId, array $chunk): array
+    {
+        $ids = [];
+        $emails = [];
+        foreach ($chunk as $row) {
+            if (isset($row['player_id'])) {
+                $ids[] = (int) $row['player_id'];
+            }
+            if (isset($row['player_email'])) {
+                $emails[] = (string) $row['player_email'];
+            }
+        }
+
+        return [$this->existingIds($versionId, $ids), $this->resolve($versionId, $emails)];
+    }
+
+    /**
+     * Resolves one row to a player id: player_id primary, player_email
+     * fallback. Never creates an implicit player; unresolvable rows return
+     * null (the caller counts them failed without blocking the batch).
+     *
+     * @param array<string, mixed> $row
+     * @param array<int, bool> $validIds
+     * @param array<string, int> $playerByEmail
+     */
+    public function resolveRow(array $row, array $validIds, array $playerByEmail): ?int
+    {
+        if (isset($row['player_id'])) {
+            $id = (int) $row['player_id'];
+            if (isset($validIds[$id])) {
+                return $id;
+            }
+        }
+        if (isset($row['player_email'])) {
+            $email = (string) $row['player_email'];
+            if (isset($playerByEmail[$email])) {
+                return $playerByEmail[$email];
+            }
+        }
+
+        return null;
+    }
 }

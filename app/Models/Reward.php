@@ -30,6 +30,7 @@ class Reward extends Model
         'status',
         'granted_at',
         'redeemed_at',
+        'dedup_key',
     ];
 
     protected $casts = [

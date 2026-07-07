@@ -3,14 +3,14 @@
 namespace App\Support\Export\Sheet;
 
 use App\Models\Export;
-use App\Models\Import;
 use Illuminate\Support\Carbon;
 
 /**
  * Builds the opt-in narrative sheets (README, KPIs, Configurazione_Richiesta,
  * Data_Quality) from data the export already produced (sheet row counts, its own
- * params) plus the version's tracked ingestion history. No query-configurable
- * source: these are report sheets, not data sheets, so they stay in-memory.
+ * params) plus data-quality checks run against the version. No
+ * query-configurable source: these are report sheets, not data sheets, so
+ * they stay in-memory.
  */
 class SummarySheetBuilder
 {
@@ -67,29 +67,80 @@ class SummarySheetBuilder
     {
         $rows = [];
         foreach ((array) $export->params as $key => $value) {
+            if ($key === 'sheets' && is_array($value)) {
+                $rows = array_merge($rows, $this->sheetConfigRows($value));
+                continue;
+            }
             $rows[] = [$key, is_scalar($value) ? $value : json_encode($value)];
         }
 
         return new InMemorySheet('Configurazione_Richiesta', ['Parameter', 'Value'], $rows);
     }
 
-    private function dataQuality(Export $export): Sheet
+    /**
+     * Parses the `sheets` param into one row per known sheet-spec field (the
+     * same fields StoreExportRequest already validates), instead of a single
+     * unreadable JSON blob.
+     *
+     * @param array<int, mixed> $sheets
+     * @return array<int, array{0: string, 1: scalar}>
+     */
+    private function sheetConfigRows(array $sheets): array
     {
         $rows = [];
-        $imports = Import::where('version_id', $export->version_id)->orderBy('id')->get();
-        foreach ($imports as $import) {
-            $rows[] = [
-                $import->uuid,
-                $import->type,
-                $import->status,
-                (int) $import->processed_rows,
-                (int) $import->inserted,
-                (int) $import->duplicates,
-                (int) $import->failed,
-            ];
+        foreach ($sheets as $index => $sheet) {
+            if (! is_array($sheet)) {
+                continue;
+            }
+
+            $label = 'Sheet ' . ($index + 1) . (isset($sheet['name']) ? " ({$sheet['name']})" : '');
+            foreach (['source', 'columns', 'group_by', 'metrics', 'sort', 'filters'] as $field) {
+                if (isset($sheet[$field])) {
+                    $rows[] = ["{$label} - {$field}", $this->formatSheetValue($sheet[$field])];
+                }
+            }
         }
 
-        $header = ['Import ID', 'Type', 'Status', 'Processed', 'Inserted', 'Duplicates', 'Failed'];
+        return $rows;
+    }
+
+    /**
+     * Renders a sheet-spec field value on one line: scalars as-is, lists as a
+     * comma-joined string, associative arrays as "key: value" pairs. Anything
+     * still nested (e.g. an aggregate column object) falls back to JSON for
+     * just that one item — never the whole spec.
+     *
+     * @param mixed $value
+     * @return scalar
+     */
+    private function formatSheetValue($value)
+    {
+        if (is_scalar($value)) {
+            return $value;
+        }
+        if (! is_array($value)) {
+            return json_encode($value);
+        }
+
+        $parts = [];
+        foreach ($value as $key => $item) {
+            $rendered = is_scalar($item) ? (string) $item : json_encode($item);
+            $parts[] = is_int($key) ? $rendered : "{$key}: {$rendered}";
+        }
+
+        return implode(', ', $parts);
+    }
+
+    private function dataQuality(Export $export): Sheet
+    {
+        $checks = (new DataQualityChecker())->run((int) $export->version_id);
+
+        $rows = [];
+        foreach ($checks as $check) {
+            $rows[] = [$check['check'], $check['severity'], $check['occurrences'], $check['description']];
+        }
+
+        $header = ['Check', 'Severity', 'Occurrences', 'Description'];
 
         return new InMemorySheet('Data_Quality', $header, $rows);
     }

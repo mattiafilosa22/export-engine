@@ -17,8 +17,13 @@ class SeedDemoCommandTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const PLAYERS = 10;
-    private const EVENTS = 50;
+    // Transactions are generated for 1-in-10 players (index % 10 === 0), only if
+    // that player happens to roll a game_completed event (~30% per event). With
+    // only 1 eligible player (PLAYERS=10) the "at least one transaction" assertion
+    // was flaky (~17% chance of 0). 100 players => 10 independent eligible players,
+    // making a zero-transaction run astronomically unlikely.
+    private const PLAYERS = 100;
+    private const EVENTS = 500;
 
     public function test_it_seeds_the_expected_row_counts(): void
     {

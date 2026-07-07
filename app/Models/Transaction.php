@@ -35,6 +35,7 @@ class Transaction extends Model
         'status',
         'external_ref',
         'occurred_at',
+        'dedup_key',
     ];
 
     protected $casts = [

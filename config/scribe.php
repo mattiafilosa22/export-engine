@@ -201,26 +201,26 @@ MD,
      */
     'auth' => [
         /*
-         * Set this to true if any endpoints in your API use authentication.
+         * All v1 endpoints go through the `api.key` middleware (app/Http/Middleware/ApiKey.php).
          */
-        'enabled' => false,
+        'enabled' => true,
 
         /*
-         * Set this to true if your API should be authenticated by default. If so, you must also set `enabled` (above) to true.
-         * You can then use @unauthenticated or @authenticated on individual endpoints to change their status from the default.
+         * The middleware is a no-op unless GAMINDO_API_KEY is set — see extra_info below —
+         * but every endpoint accepts the header uniformly, so it's documented on all of them.
          */
-        'default' => false,
+        'default' => true,
 
         /*
          * Where is the auth value meant to be sent in a request?
          * Options: query, body, basic, bearer, header (for custom header)
          */
-        'in' => 'bearer',
+        'in' => 'header',
 
         /*
          * The name of the auth parameter (eg token, key, apiKey) or header (eg Authorization, Api-Key).
          */
-        'name' => 'key',
+        'name' => 'X-Api-Key',
 
         /*
          * The value of the parameter to be used by Scribe to authenticate response calls.
@@ -233,13 +233,14 @@ MD,
          * Placeholder your users will see for the auth parameter in the example requests.
          * Set this to null if you want Scribe to use a random value as placeholder instead.
          */
-        'placeholder' => '{YOUR_AUTH_KEY}',
+        'placeholder' => '{{api_key}}',
 
         /*
          * Any extra authentication-related info for your users. For instance, you can describe how to find or generate their auth credentials.
          * Markdown and HTML are supported.
          */
-        'extra_info' => 'You can retrieve your token by visiting your dashboard and clicking <b>Generate API token</b>.',
+        'extra_info' => 'Optional machine-to-machine auth: set `GAMINDO_API_KEY` in `.env` to require this '
+            . 'header on every request (no-op, header ignored, if left unset).',
     ],
 
     /*

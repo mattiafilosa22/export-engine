@@ -2,8 +2,9 @@
 
 namespace Tests\Unit\Export;
 
+use App\Models\Event;
 use App\Models\Export;
-use App\Models\Import;
+use App\Models\Player;
 use App\Models\Version;
 use App\Support\Export\Sheet\SummarySheetBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -37,43 +38,52 @@ class SummarySheetBuilderTest extends TestCase
         $this->assertContains(['Total', 15], $rows);
     }
 
-    public function test_configuration_dumps_scalar_params_as_is_and_arrays_as_json(): void
+    public function test_configuration_dumps_scalar_params_as_is(): void
     {
-        $export = $this->export(['date_from' => '2026-01-01', 'sheets' => [['name' => 'Players']]]);
+        $export = $this->export(['date_from' => '2026-01-01', 'include_summary' => true]);
 
         $sheet = (new SummarySheetBuilder())->build($export, [])['configuration'];
 
         $rows = (array) $sheet->rows();
         $this->assertContains(['date_from', '2026-01-01'], $rows);
-        $this->assertContains(['sheets', json_encode([['name' => 'Players']])], $rows);
+        $this->assertContains(['include_summary', true], $rows);
     }
 
-    public function test_data_quality_lists_the_versions_imports(): void
+    public function test_configuration_parses_sheets_into_one_readable_row_per_field(): void
     {
-        $export = $this->export([]);
-        Import::factory()->create([
-            'version_id' => $export->version_id,
-            'status' => Import::STATUS_COMPLETED,
-            'processed_rows' => 10,
-            'inserted' => 8,
-            'duplicates' => 1,
-            'failed' => 1,
-        ]);
+        $export = $this->export(['sheets' => [
+            [
+                'name' => 'Players',
+                'source' => 'players',
+                'columns' => ['player_id', 'email'],
+                'filters' => ['language' => 'it'],
+                'sort' => ['total_score:desc'],
+            ],
+        ]]);
 
-        $sheet = (new SummarySheetBuilder())->build($export, [])['dataQuality'];
+        $sheet = (new SummarySheetBuilder())->build($export, [])['configuration'];
 
         $rows = (array) $sheet->rows();
-        $this->assertCount(1, $rows);
-        $this->assertSame([Import::TYPE_PLAYERS, Import::STATUS_COMPLETED, 10, 8, 1, 1], array_slice($rows[0], 1));
+        $this->assertContains(['Sheet 1 (Players) - source', 'players'], $rows);
+        $this->assertContains(['Sheet 1 (Players) - columns', 'player_id, email'], $rows);
+        $this->assertContains(['Sheet 1 (Players) - filters', 'language: it'], $rows);
+        $this->assertContains(['Sheet 1 (Players) - sort', 'total_score:desc'], $rows);
+        // No raw JSON blob for the whole array left behind.
+        $this->assertNotContains(['sheets', json_encode($export->params['sheets'])], $rows);
     }
 
-    public function test_data_quality_is_empty_when_the_version_has_no_imports(): void
+    public function test_data_quality_lists_each_check_with_severity_and_occurrences(): void
     {
-        $export = $this->export([]);
+        $version = Version::factory()->create();
+        $player = Player::factory()->create(['version_id' => $version->id]);
+        Event::factory()->forPlayer($player)->create(['payload' => []]);
+        $export = Export::factory()->create(['version_id' => $version->id, 'params' => []]);
 
         $sheet = (new SummarySheetBuilder())->build($export, [])['dataQuality'];
 
-        $this->assertSame(0, $sheet->count());
+        $this->assertSame(['Check', 'Severity', 'Occurrences', 'Description'], $sheet->header());
+        $rows = (array) $sheet->rows();
+        $this->assertContains(['empty_payload', 'info', 1, 'Eventi con payload JSON vuoto.'], $rows);
     }
 
     /**

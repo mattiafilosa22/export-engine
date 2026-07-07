@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -105,6 +106,40 @@ abstract class AbstractIngestJob implements ShouldQueue
      * @return array{processed:int, inserted:int, duplicates:int, failed:int}
      */
     abstract protected function process(Import $import, LoggerInterface $logger): array;
+
+    /**
+     * Runs $ingestChunk over the import's payload, chunked and each chunk in
+     * its own transaction, accumulating the 4 counters. Every concrete job
+     * shares this exact loop — only the per-chunk ingestion logic differs.
+     *
+     * @param callable(array<int, array<string, mixed>>): array{inserted:int, duplicates:int, failed:int} $ingestChunk
+     * @return array{processed:int, inserted:int, duplicates:int, failed:int}
+     */
+    protected function processInChunks(Import $import, callable $ingestChunk): array
+    {
+        $processed = 0;
+        $inserted = 0;
+        $duplicates = 0;
+        $failed = 0;
+
+        foreach (array_chunk($import->payload, $this->chunkSize()) as $chunk) {
+            $counts = DB::transaction(function () use ($chunk, $ingestChunk) {
+                return $ingestChunk($chunk);
+            });
+
+            $processed += count($chunk);
+            $inserted += $counts['inserted'];
+            $duplicates += $counts['duplicates'];
+            $failed += $counts['failed'];
+        }
+
+        return [
+            'processed' => $processed,
+            'inserted' => $inserted,
+            'duplicates' => $duplicates,
+            'failed' => $failed,
+        ];
+    }
 
     protected function chunkSize(): int
     {

@@ -6,7 +6,6 @@ use App\Models\Import;
 use App\Models\Player;
 use App\Models\User;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -22,26 +21,11 @@ class IngestPlayersJob extends AbstractIngestJob
     protected function process(Import $import, LoggerInterface $logger): array
     {
         $versionId = (int) $import->version_id;
-        $processed = 0;
-        $inserted = 0;
-        $duplicates = 0;
 
-        foreach (array_chunk($import->payload, $this->chunkSize()) as $chunk) {
-            $counts = DB::transaction(function () use ($versionId, $chunk) {
-                return $this->ingestChunk($versionId, $chunk);
-            });
-
-            $processed += count($chunk);
-            $inserted += $counts['inserted'];
-            $duplicates += $counts['duplicates'];
-        }
-
-        return [
-            'processed' => $processed,
-            'inserted' => $inserted,
-            'duplicates' => $duplicates,
-            'failed' => 0,
-        ];
+        return $this->processInChunks($import, function (array $chunk) use ($versionId) {
+            // Never any unresolvable rows here: a player batch always upserts.
+            return $this->ingestChunk($versionId, $chunk) + ['failed' => 0];
+        });
     }
 
     /**

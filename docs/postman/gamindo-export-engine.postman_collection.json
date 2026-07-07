@@ -1,0 +1,1939 @@
+{
+    "variable": [
+        {
+            "id": "baseUrl",
+            "key": "baseUrl",
+            "type": "string",
+            "name": "string",
+            "value": "localhost"
+        }
+    ],
+    "info": {
+        "name": "Gamindo Export Engine",
+        "_postman_id": "2aa35583-6add-4c46-ab71-83a975da8707",
+        "description": "Ingest large batches of campaign events and player data, then generate customizable **XLSX reports** \u2014 all **asynchronously**. You never block on a request.\n\n### How it works\n\n1. **Submit** a batch or an export request. The API replies immediately with **`202 Accepted`**, a resource `id`, and `status: pending`.\n2. **Poll** the matching status endpoint until `status` is `completed` (or `failed`).\n3. **Read the result** \u2014 download the XLSX for exports, or read the counters for imports.\n\n**Base URL:** `http://localhost:8080/api/v1`\n\n### Ingestion (hybrid)\n\nValidated synchronously at the edge, written asynchronously in transactional chunks. **Idempotent**: re-sending the same batch never duplicates.\n\n### Export\n\nQueued to a worker that streams the XLSX at constant memory, then exposes it for download once `completed`.\n\n### Conventions\n\n- Resources are addressed by a non-enumerable **UUID**.\n- Batches over **5000 rows** are rejected with **`413`**; malformed payloads with **`422`**.\n- Domain times are **UTC** (ISO-8601).",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Exports",
+            "description": "",
+            "item": [
+                {
+                    "name": "Create an export",
+                    "request": {
+                        "url": {
+                            "protocol": "http",
+                            "host": "{{baseUrl}}",
+                            "path": "api/v1/versions/:version/exports",
+                            "query": [],
+                            "raw": "http://{{baseUrl}}/api/v1/versions/:version/exports",
+                            "variable": [
+                                {
+                                    "id": "version",
+                                    "key": "version",
+                                    "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                    "description": "The version UUID."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"format\": \"xlsx\",\n    \"date_from\": \"2026-01-01\",\n    \"date_to\": \"2026-01-31\",\n    \"include_summary\": true,\n    \"sheets\": [\n        {\n            \"name\": \"players\",\n            \"source\": \"events\",\n            \"columns\": [\n                \"est\",\n                \"omnis\"\n            ],\n            \"metrics\": [\n                \"quibusdam\",\n                \"est\"\n            ],\n            \"group_by\": [\n                \"voluptatem\",\n                \"error\"\n            ],\n            \"sort\": [\n                \"dignissimos\",\n                \"impedit\"\n            ],\n            \"filters\": {\n                \"*\": \"it\"\n            }\n        },\n        {\n            \"columns\": [\n                \"est\",\n                \"omnis\"\n            ],\n            \"group_by\": [\n                \"voluptatem\",\n                \"error\"\n            ],\n            \"filters\": []\n        }\n    ]\n}"
+                        },
+                        "description": "Queue an asynchronous XLSX export for a version. Returns 202 with the export in `pending` state.\nFully client-configurable: choose sheets, columns, filters, sorting, aggregations and a date range.\nAll fields are optional (sensible defaults apply); omit `sheets` for a default events sheet."
+                    },
+                    "response": [
+                        {
+                            "name": "Create an export Response #1",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/exports",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/exports",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"format\": \"xlsx\",\n    \"date_from\": \"2026-01-01\",\n    \"date_to\": \"2026-01-31\",\n    \"include_summary\": true,\n    \"sheets\": [\n        {\n            \"name\": \"players\",\n            \"source\": \"events\",\n            \"columns\": [\n                \"est\",\n                \"omnis\"\n            ],\n            \"metrics\": [\n                \"quibusdam\",\n                \"est\"\n            ],\n            \"group_by\": [\n                \"voluptatem\",\n                \"error\"\n            ],\n            \"sort\": [\n                \"dignissimos\",\n                \"impedit\"\n            ],\n            \"filters\": {\n                \"*\": \"it\"\n            }\n        },\n        {\n            \"columns\": [\n                \"est\",\n                \"omnis\"\n            ],\n            \"group_by\": [\n                \"voluptatem\",\n                \"error\"\n            ],\n            \"filters\": []\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous XLSX export for a version. Returns 202 with the export in `pending` state.\nFully client-configurable: choose sheets, columns, filters, sorting, aggregations and a date range.\nAll fields are optional (sensible defaults apply); omit `sheets` for a default events sheet."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"data\": {\n        \"id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n        \"status\": \"pending\",\n        \"format\": \"xlsx\"\n    }\n}"
+                        },
+                        {
+                            "name": "Create an export Response #2",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/exports",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/exports",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"format\": \"xlsx\",\n    \"date_from\": \"2026-01-01\",\n    \"date_to\": \"2026-01-31\",\n    \"include_summary\": true,\n    \"sheets\": [\n        {\n            \"name\": \"players\",\n            \"source\": \"events\",\n            \"columns\": [\n                \"est\",\n                \"omnis\"\n            ],\n            \"metrics\": [\n                \"quibusdam\",\n                \"est\"\n            ],\n            \"group_by\": [\n                \"voluptatem\",\n                \"error\"\n            ],\n            \"sort\": [\n                \"dignissimos\",\n                \"impedit\"\n            ],\n            \"filters\": {\n                \"*\": \"it\"\n            }\n        },\n        {\n            \"columns\": [\n                \"est\",\n                \"omnis\"\n            ],\n            \"group_by\": [\n                \"voluptatem\",\n                \"error\"\n            ],\n            \"filters\": []\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous XLSX export for a version. Returns 202 with the export in `pending` state.\nFully client-configurable: choose sheets, columns, filters, sorting, aggregations and a date range.\nAll fields are optional (sensible defaults apply); omit `sheets` for a default events sheet."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"No query results for model [App\\\\Models\\\\Version].\"\n}"
+                        },
+                        {
+                            "name": "Create an export Response #3",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/exports",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/exports",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"format\": \"xlsx\",\n    \"date_from\": \"2026-01-01\",\n    \"date_to\": \"2026-01-31\",\n    \"include_summary\": true,\n    \"sheets\": [\n        {\n            \"name\": \"players\",\n            \"source\": \"events\",\n            \"columns\": [\n                \"est\",\n                \"omnis\"\n            ],\n            \"metrics\": [\n                \"quibusdam\",\n                \"est\"\n            ],\n            \"group_by\": [\n                \"voluptatem\",\n                \"error\"\n            ],\n            \"sort\": [\n                \"dignissimos\",\n                \"impedit\"\n            ],\n            \"filters\": {\n                \"*\": \"it\"\n            }\n        },\n        {\n            \"columns\": [\n                \"est\",\n                \"omnis\"\n            ],\n            \"group_by\": [\n                \"voluptatem\",\n                \"error\"\n            ],\n            \"filters\": []\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous XLSX export for a version. Returns 202 with the export in `pending` state.\nFully client-configurable: choose sheets, columns, filters, sorting, aggregations and a date range.\nAll fields are optional (sensible defaults apply); omit `sheets` for a default events sheet."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"The given data was invalid.\",\n    \"errors\": {\n        \"sheets.0.metrics\": [\n            \"Unsupported metric 'x'.\"\n        ]\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Preview an export",
+                    "request": {
+                        "url": {
+                            "protocol": "http",
+                            "host": "{{baseUrl}}",
+                            "path": "api/v1/versions/:version/exports/preview",
+                            "query": [],
+                            "raw": "http://{{baseUrl}}/api/v1/versions/:version/exports/preview",
+                            "variable": [
+                                {
+                                    "id": "version",
+                                    "key": "version",
+                                    "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                    "description": "The version UUID."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"format\": \"xlsx\",\n    \"date_from\": \"2026-07-07T15:15:57+0000\",\n    \"date_to\": \"2026-07-07T15:15:57+0000\",\n    \"include_summary\": false,\n    \"sheets\": [\n        {\n            \"name\": \"quia\",\n            \"source\": \"answers\",\n            \"columns\": [\n                \"placeat\"\n            ],\n            \"metrics\": [\n                \"et\"\n            ],\n            \"group_by\": [\n                \"nulla\"\n            ],\n            \"sort\": [\n                \"vel\"\n            ],\n            \"filters\": [\n                \"alias\"\n            ]\n        }\n    ]\n}"
+                        },
+                        "description": "Return the first rows (max 100) of each configured sheet as JSON \u2014 a quick\nlook before queuing the heavy async XLSX export. Same spec as create export."
+                    },
+                    "response": [
+                        {
+                            "name": "Preview an export Response #1",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/exports/preview",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/exports/preview",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"format\": \"xlsx\",\n    \"date_from\": \"2026-07-07T15:15:57+0000\",\n    \"date_to\": \"2026-07-07T15:15:57+0000\",\n    \"include_summary\": false,\n    \"sheets\": [\n        {\n            \"name\": \"quia\",\n            \"source\": \"answers\",\n            \"columns\": [\n                \"placeat\"\n            ],\n            \"metrics\": [\n                \"et\"\n            ],\n            \"group_by\": [\n                \"nulla\"\n            ],\n            \"sort\": [\n                \"vel\"\n            ],\n            \"filters\": [\n                \"alias\"\n            ]\n        }\n    ]\n}"
+                                },
+                                "description": "Return the first rows (max 100) of each configured sheet as JSON \u2014 a quick\nlook before queuing the heavy async XLSX export. Same spec as create export."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"data\": {\n        \"sheets\": [\n            {\n                \"name\": \"Events\",\n                \"header\": [\n                    \"id\",\n                    \"type\"\n                ],\n                \"rows\": [],\n                \"truncated\": false\n            }\n        ]\n    }\n}"
+                        },
+                        {
+                            "name": "Preview an export Response #2",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/exports/preview",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/exports/preview",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"format\": \"xlsx\",\n    \"date_from\": \"2026-07-07T15:15:57+0000\",\n    \"date_to\": \"2026-07-07T15:15:57+0000\",\n    \"include_summary\": false,\n    \"sheets\": [\n        {\n            \"name\": \"quia\",\n            \"source\": \"answers\",\n            \"columns\": [\n                \"placeat\"\n            ],\n            \"metrics\": [\n                \"et\"\n            ],\n            \"group_by\": [\n                \"nulla\"\n            ],\n            \"sort\": [\n                \"vel\"\n            ],\n            \"filters\": [\n                \"alias\"\n            ]\n        }\n    ]\n}"
+                                },
+                                "description": "Return the first rows (max 100) of each configured sheet as JSON \u2014 a quick\nlook before queuing the heavy async XLSX export. Same spec as create export."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"The given data was invalid.\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Show an export",
+                    "request": {
+                        "url": {
+                            "protocol": "http",
+                            "host": "{{baseUrl}}",
+                            "path": "api/v1/exports/:export",
+                            "query": [],
+                            "raw": "http://{{baseUrl}}/api/v1/exports/:export",
+                            "variable": [
+                                {
+                                    "id": "export",
+                                    "key": "export",
+                                    "value": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+                                    "description": "The export UUID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Return the current durable state of an export."
+                    },
+                    "response": [
+                        {
+                            "name": "Show an export Response #1",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/exports/:export",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/exports/:export",
+                                    "variable": [
+                                        {
+                                            "id": "export",
+                                            "key": "export",
+                                            "value": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+                                            "description": "The export UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": null,
+                                "description": "Return the current durable state of an export."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"data\": {\n        \"id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n        \"status\": \"completed\",\n        \"format\": \"xlsx\",\n        \"progress\": 100,\n        \"total_rows\": 3000\n    }\n}"
+                        },
+                        {
+                            "name": "Show an export Response #2",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/exports/:export",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/exports/:export",
+                                    "variable": [
+                                        {
+                                            "id": "export",
+                                            "key": "export",
+                                            "value": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+                                            "description": "The export UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": null,
+                                "description": "Return the current durable state of an export."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"No query results for model [App\\\\Models\\\\Export].\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Cancel an export",
+                    "request": {
+                        "url": {
+                            "protocol": "http",
+                            "host": "{{baseUrl}}",
+                            "path": "api/v1/exports/:export/cancel",
+                            "query": [],
+                            "raw": "http://{{baseUrl}}/api/v1/exports/:export/cancel",
+                            "variable": [
+                                {
+                                    "id": "export",
+                                    "key": "export",
+                                    "value": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+                                    "description": "The export UUID."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Request cancellation. A pending export is cancelled immediately; a\nprocessing one is stopped at the next chunk. A finished export \u2192 409."
+                    },
+                    "response": [
+                        {
+                            "name": "Cancel an export Response #1",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/exports/:export/cancel",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/exports/:export/cancel",
+                                    "variable": [
+                                        {
+                                            "id": "export",
+                                            "key": "export",
+                                            "value": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+                                            "description": "The export UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": null,
+                                "description": "Request cancellation. A pending export is cancelled immediately; a\nprocessing one is stopped at the next chunk. A finished export \u2192 409."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"data\": {\n        \"id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n        \"status\": \"cancelled\"\n    }\n}"
+                        },
+                        {
+                            "name": "Cancel an export Response #2",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/exports/:export/cancel",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/exports/:export/cancel",
+                                    "variable": [
+                                        {
+                                            "id": "export",
+                                            "key": "export",
+                                            "value": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+                                            "description": "The export UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": null,
+                                "description": "Request cancellation. A pending export is cancelled immediately; a\nprocessing one is stopped at the next chunk. A finished export \u2192 409."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"Export cannot be cancelled.\"\n}"
+                        },
+                        {
+                            "name": "Cancel an export Response #3",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/exports/:export/cancel",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/exports/:export/cancel",
+                                    "variable": [
+                                        {
+                                            "id": "export",
+                                            "key": "export",
+                                            "value": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+                                            "description": "The export UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": null,
+                                "description": "Request cancellation. A pending export is cancelled immediately; a\nprocessing one is stopped at the next chunk. A finished export \u2192 409."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"No query results for model [App\\\\Models\\\\Export].\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Download an export file",
+                    "request": {
+                        "url": {
+                            "protocol": "http",
+                            "host": "{{baseUrl}}",
+                            "path": "api/v1/exports/:export/download",
+                            "query": [],
+                            "raw": "http://{{baseUrl}}/api/v1/exports/:export/download",
+                            "variable": [
+                                {
+                                    "id": "export",
+                                    "key": "export",
+                                    "value": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+                                    "description": "The export UUID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Stream the generated XLSX file. Available only when the export is `completed`."
+                    },
+                    "response": [
+                        {
+                            "name": "Download an export file Response #1",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/exports/:export/download",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/exports/:export/download",
+                                    "variable": [
+                                        {
+                                            "id": "export",
+                                            "key": "export",
+                                            "value": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+                                            "description": "The export UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": null,
+                                "description": "Stream the generated XLSX file. Available only when the export is `completed`."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"Export is not completed.\"\n}"
+                        },
+                        {
+                            "name": "Download an export file Response #2",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/exports/:export/download",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/exports/:export/download",
+                                    "variable": [
+                                        {
+                                            "id": "export",
+                                            "key": "export",
+                                            "value": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+                                            "description": "The export UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": null,
+                                "description": "Stream the generated XLSX file. Available only when the export is `completed`."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"Export file not found.\"\n}"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Ingestion",
+            "description": "",
+            "item": [
+                {
+                    "name": "Ingest players",
+                    "request": {
+                        "url": {
+                            "protocol": "http",
+                            "host": "{{baseUrl}}",
+                            "path": "api/v1/versions/:version/players",
+                            "query": [],
+                            "raw": "http://{{baseUrl}}/api/v1/versions/:version/players",
+                            "variable": [
+                                {
+                                    "id": "version",
+                                    "key": "version",
+                                    "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                    "description": "The version UUID."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"players\": [\n        {\n            \"email\": \"mario@example.com\",\n            \"external_id\": \"sso-123\",\n            \"registered_at\": \"2026-01-15T10:00:00Z\",\n            \"language\": \"it\"\n        },\n        {\n            \"email\": \"mario@example.com\",\n            \"language\": \"it\"\n        }\n    ]\n}"
+                        },
+                        "description": "Queue an asynchronous upsert of a players batch. The batch is validated\nsynchronously (structure + size) and written in the background."
+                    },
+                    "response": [
+                        {
+                            "name": "Ingest players Response #1",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/players",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/players",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"players\": [\n        {\n            \"email\": \"mario@example.com\",\n            \"external_id\": \"sso-123\",\n            \"registered_at\": \"2026-01-15T10:00:00Z\",\n            \"language\": \"it\"\n        },\n        {\n            \"email\": \"mario@example.com\",\n            \"language\": \"it\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous upsert of a players batch. The batch is validated\nsynchronously (structure + size) and written in the background."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"data\": {\n        \"id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n        \"type\": \"players\",\n        \"status\": \"pending\",\n        \"total_rows\": 2\n    }\n}"
+                        },
+                        {
+                            "name": "Ingest players Response #2",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/players",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/players",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"players\": [\n        {\n            \"email\": \"mario@example.com\",\n            \"external_id\": \"sso-123\",\n            \"registered_at\": \"2026-01-15T10:00:00Z\",\n            \"language\": \"it\"\n        },\n        {\n            \"email\": \"mario@example.com\",\n            \"language\": \"it\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous upsert of a players batch. The batch is validated\nsynchronously (structure + size) and written in the background."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"Batch too large.\"\n}"
+                        },
+                        {
+                            "name": "Ingest players Response #3",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/players",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/players",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"players\": [\n        {\n            \"email\": \"mario@example.com\",\n            \"external_id\": \"sso-123\",\n            \"registered_at\": \"2026-01-15T10:00:00Z\",\n            \"language\": \"it\"\n        },\n        {\n            \"email\": \"mario@example.com\",\n            \"language\": \"it\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous upsert of a players batch. The batch is validated\nsynchronously (structure + size) and written in the background."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"The given data was invalid.\",\n    \"errors\": {\n        \"players.0.email\": [\n            \"The email is required.\"\n        ]\n    }\n}"
+                        },
+                        {
+                            "name": "Ingest players Response #4",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/players",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/players",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"players\": [\n        {\n            \"email\": \"mario@example.com\",\n            \"external_id\": \"sso-123\",\n            \"registered_at\": \"2026-01-15T10:00:00Z\",\n            \"language\": \"it\"\n        },\n        {\n            \"email\": \"mario@example.com\",\n            \"language\": \"it\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous upsert of a players batch. The batch is validated\nsynchronously (structure + size) and written in the background."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"No query results for model [App\\\\Models\\\\Version].\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "List players",
+                    "request": {
+                        "url": {
+                            "protocol": "http",
+                            "host": "{{baseUrl}}",
+                            "path": "api/v1/versions/:version/players",
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "50",
+                                    "description": "Rows per page (1..200, default 50).",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "http://{{baseUrl}}/api/v1/versions/:version/players?per_page=50",
+                            "variable": [
+                                {
+                                    "id": "version",
+                                    "key": "version",
+                                    "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                    "description": "The version UUID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Paginated list of a version's players with their identity (email)."
+                    },
+                    "response": [
+                        {
+                            "name": "List players Response #1",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/players",
+                                    "query": [
+                                        {
+                                            "key": "per_page",
+                                            "value": "50",
+                                            "description": "Rows per page (1..200, default 50).",
+                                            "disabled": false
+                                        }
+                                    ],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/players?per_page=50",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": null,
+                                "description": "Paginated list of a version's players with their identity (email)."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"data\": [\n        {\n            \"id\": 42,\n            \"email\": \"x@a.com\",\n            \"registered_at\": \"2026-01-01T00:00:00+00:00\",\n            \"total_score\": 10,\n            \"language\": \"it\"\n        }\n    ]\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Ingest events",
+                    "request": {
+                        "url": {
+                            "protocol": "http",
+                            "host": "{{baseUrl}}",
+                            "path": "api/v1/versions/:version/events",
+                            "query": [],
+                            "raw": "http://{{baseUrl}}/api/v1/versions/:version/events",
+                            "variable": [
+                                {
+                                    "id": "version",
+                                    "key": "version",
+                                    "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                    "description": "The version UUID."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"events\": [\n        {\n            \"dedup_key\": \"evt-1\",\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"transaction\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\",\n            \"payload\": {\n                \"amount\": 9.99,\n                \"*\": \"9.99\"\n            }\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"transaction\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                        },
+                        "description": "Queue an asynchronous append of an events batch. Idempotent on\n(version_id, dedup_key) when a key is provided; keyless events are\nalways appended."
+                    },
+                    "response": [
+                        {
+                            "name": "Ingest events Response #1",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/events",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/events",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"events\": [\n        {\n            \"dedup_key\": \"evt-1\",\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"transaction\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\",\n            \"payload\": {\n                \"amount\": 9.99,\n                \"*\": \"9.99\"\n            }\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"transaction\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous append of an events batch. Idempotent on\n(version_id, dedup_key) when a key is provided; keyless events are\nalways appended."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"data\": {\n        \"id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n        \"type\": \"events\",\n        \"status\": \"pending\"\n    }\n}"
+                        },
+                        {
+                            "name": "Ingest events Response #2",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/events",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/events",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"events\": [\n        {\n            \"dedup_key\": \"evt-1\",\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"transaction\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\",\n            \"payload\": {\n                \"amount\": 9.99,\n                \"*\": \"9.99\"\n            }\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"transaction\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous append of an events batch. Idempotent on\n(version_id, dedup_key) when a key is provided; keyless events are\nalways appended."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"Batch too large.\"\n}"
+                        },
+                        {
+                            "name": "Ingest events Response #3",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/events",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/events",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"events\": [\n        {\n            \"dedup_key\": \"evt-1\",\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"transaction\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\",\n            \"payload\": {\n                \"amount\": 9.99,\n                \"*\": \"9.99\"\n            }\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"transaction\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous append of an events batch. Idempotent on\n(version_id, dedup_key) when a key is provided; keyless events are\nalways appended."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"The given data was invalid.\",\n    \"errors\": {\n        \"events.0.player_id\": [\n            \"Required.\"\n        ]\n    }\n}"
+                        },
+                        {
+                            "name": "Ingest events Response #4",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/events",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/events",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"events\": [\n        {\n            \"dedup_key\": \"evt-1\",\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"transaction\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\",\n            \"payload\": {\n                \"amount\": 9.99,\n                \"*\": \"9.99\"\n            }\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"transaction\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous append of an events batch. Idempotent on\n(version_id, dedup_key) when a key is provided; keyless events are\nalways appended."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"No query results for model [App\\\\Models\\\\Version].\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Ingest transactions",
+                    "request": {
+                        "url": {
+                            "protocol": "http",
+                            "host": "{{baseUrl}}",
+                            "path": "api/v1/versions/:version/transactions",
+                            "query": [],
+                            "raw": "http://{{baseUrl}}/api/v1/versions/:version/transactions",
+                            "variable": [
+                                {
+                                    "id": "version",
+                                    "key": "version",
+                                    "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                    "description": "The version UUID."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"transactions\": [\n        {\n            \"dedup_key\": \"txn-1\",\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"purchase\",\n            \"amount\": 9.99,\n            \"currency\": \"EUR\",\n            \"status\": \"completed\",\n            \"external_ref\": \"PAY-123\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"purchase\",\n            \"amount\": 9.99,\n            \"currency\": \"EUR\",\n            \"status\": \"completed\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                        },
+                        "description": "Queue an asynchronous append of a transactions batch. Idempotent on\n(version_id, dedup_key) when a key is provided; keyless rows are always\nappended. Rows inserted here have no linked event."
+                    },
+                    "response": [
+                        {
+                            "name": "Ingest transactions Response #1",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/transactions",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/transactions",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"transactions\": [\n        {\n            \"dedup_key\": \"txn-1\",\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"purchase\",\n            \"amount\": 9.99,\n            \"currency\": \"EUR\",\n            \"status\": \"completed\",\n            \"external_ref\": \"PAY-123\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"purchase\",\n            \"amount\": 9.99,\n            \"currency\": \"EUR\",\n            \"status\": \"completed\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous append of a transactions batch. Idempotent on\n(version_id, dedup_key) when a key is provided; keyless rows are always\nappended. Rows inserted here have no linked event."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"data\": {\n        \"id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n        \"type\": \"transactions\",\n        \"status\": \"pending\"\n    }\n}"
+                        },
+                        {
+                            "name": "Ingest transactions Response #2",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/transactions",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/transactions",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"transactions\": [\n        {\n            \"dedup_key\": \"txn-1\",\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"purchase\",\n            \"amount\": 9.99,\n            \"currency\": \"EUR\",\n            \"status\": \"completed\",\n            \"external_ref\": \"PAY-123\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"purchase\",\n            \"amount\": 9.99,\n            \"currency\": \"EUR\",\n            \"status\": \"completed\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous append of a transactions batch. Idempotent on\n(version_id, dedup_key) when a key is provided; keyless rows are always\nappended. Rows inserted here have no linked event."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"Batch too large.\"\n}"
+                        },
+                        {
+                            "name": "Ingest transactions Response #3",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/transactions",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/transactions",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"transactions\": [\n        {\n            \"dedup_key\": \"txn-1\",\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"purchase\",\n            \"amount\": 9.99,\n            \"currency\": \"EUR\",\n            \"status\": \"completed\",\n            \"external_ref\": \"PAY-123\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"purchase\",\n            \"amount\": 9.99,\n            \"currency\": \"EUR\",\n            \"status\": \"completed\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous append of a transactions batch. Idempotent on\n(version_id, dedup_key) when a key is provided; keyless rows are always\nappended. Rows inserted here have no linked event."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"The given data was invalid.\",\n    \"errors\": {\n        \"transactions.0.amount\": [\n            \"Required.\"\n        ]\n    }\n}"
+                        },
+                        {
+                            "name": "Ingest transactions Response #4",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/transactions",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/transactions",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"transactions\": [\n        {\n            \"dedup_key\": \"txn-1\",\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"purchase\",\n            \"amount\": 9.99,\n            \"currency\": \"EUR\",\n            \"status\": \"completed\",\n            \"external_ref\": \"PAY-123\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"type\": \"purchase\",\n            \"amount\": 9.99,\n            \"currency\": \"EUR\",\n            \"status\": \"completed\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous append of a transactions batch. Idempotent on\n(version_id, dedup_key) when a key is provided; keyless rows are always\nappended. Rows inserted here have no linked event."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"No query results for model [App\\\\Models\\\\Version].\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Ingest answers",
+                    "request": {
+                        "url": {
+                            "protocol": "http",
+                            "host": "{{baseUrl}}",
+                            "path": "api/v1/versions/:version/answers",
+                            "query": [],
+                            "raw": "http://{{baseUrl}}/api/v1/versions/:version/answers",
+                            "variable": [
+                                {
+                                    "id": "version",
+                                    "key": "version",
+                                    "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                    "description": "The version UUID."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"answers\": [\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"question_id\": 1,\n            \"answer_option_id\": 3,\n            \"answer_text\": \"My answer\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"question_id\": 1,\n            \"answer_option_id\": 3,\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                        },
+                        "description": "Queue an asynchronous append of an answers batch. Idempotent on the\ntable's natural key (version_id, player_id, question_id) \u2014 a resend does\nnot duplicate. Rows inserted here have no linked event."
+                    },
+                    "response": [
+                        {
+                            "name": "Ingest answers Response #1",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/answers",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/answers",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"answers\": [\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"question_id\": 1,\n            \"answer_option_id\": 3,\n            \"answer_text\": \"My answer\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"question_id\": 1,\n            \"answer_option_id\": 3,\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous append of an answers batch. Idempotent on the\ntable's natural key (version_id, player_id, question_id) \u2014 a resend does\nnot duplicate. Rows inserted here have no linked event."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"data\": {\n        \"id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n        \"type\": \"answers\",\n        \"status\": \"pending\"\n    }\n}"
+                        },
+                        {
+                            "name": "Ingest answers Response #2",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/answers",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/answers",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"answers\": [\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"question_id\": 1,\n            \"answer_option_id\": 3,\n            \"answer_text\": \"My answer\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"question_id\": 1,\n            \"answer_option_id\": 3,\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous append of an answers batch. Idempotent on the\ntable's natural key (version_id, player_id, question_id) \u2014 a resend does\nnot duplicate. Rows inserted here have no linked event."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"Batch too large.\"\n}"
+                        },
+                        {
+                            "name": "Ingest answers Response #3",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/answers",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/answers",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"answers\": [\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"question_id\": 1,\n            \"answer_option_id\": 3,\n            \"answer_text\": \"My answer\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"question_id\": 1,\n            \"answer_option_id\": 3,\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous append of an answers batch. Idempotent on the\ntable's natural key (version_id, player_id, question_id) \u2014 a resend does\nnot duplicate. Rows inserted here have no linked event."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"The given data was invalid.\",\n    \"errors\": {\n        \"answers.0.question_id\": [\n            \"Required.\"\n        ]\n    }\n}"
+                        },
+                        {
+                            "name": "Ingest answers Response #4",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/answers",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/answers",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"answers\": [\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"question_id\": 1,\n            \"answer_option_id\": 3,\n            \"answer_text\": \"My answer\",\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"question_id\": 1,\n            \"answer_option_id\": 3,\n            \"occurred_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous append of an answers batch. Idempotent on the\ntable's natural key (version_id, player_id, question_id) \u2014 a resend does\nnot duplicate. Rows inserted here have no linked event."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"No query results for model [App\\\\Models\\\\Version].\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Ingest rewards",
+                    "request": {
+                        "url": {
+                            "protocol": "http",
+                            "host": "{{baseUrl}}",
+                            "path": "api/v1/versions/:version/rewards",
+                            "query": [],
+                            "raw": "http://{{baseUrl}}/api/v1/versions/:version/rewards",
+                            "variable": [
+                                {
+                                    "id": "version",
+                                    "key": "version",
+                                    "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                    "description": "The version UUID."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"rewards\": [\n        {\n            \"dedup_key\": \"rwd-1\",\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"reward_type\": \"coupon\",\n            \"reward_code\": \"XMAS10\",\n            \"status\": \"granted\",\n            \"granted_at\": \"2026-01-15T10:00:00Z\",\n            \"redeemed_at\": \"2026-01-20T10:00:00Z\"\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"reward_type\": \"coupon\",\n            \"reward_code\": \"XMAS10\",\n            \"status\": \"granted\",\n            \"granted_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                        },
+                        "description": "Queue an asynchronous append of a rewards batch. Idempotent on\n(version_id, dedup_key) when a key is provided; keyless rows are always\nappended. Rows inserted here have no linked event."
+                    },
+                    "response": [
+                        {
+                            "name": "Ingest rewards Response #1",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/rewards",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/rewards",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"rewards\": [\n        {\n            \"dedup_key\": \"rwd-1\",\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"reward_type\": \"coupon\",\n            \"reward_code\": \"XMAS10\",\n            \"status\": \"granted\",\n            \"granted_at\": \"2026-01-15T10:00:00Z\",\n            \"redeemed_at\": \"2026-01-20T10:00:00Z\"\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"reward_type\": \"coupon\",\n            \"reward_code\": \"XMAS10\",\n            \"status\": \"granted\",\n            \"granted_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous append of a rewards batch. Idempotent on\n(version_id, dedup_key) when a key is provided; keyless rows are always\nappended. Rows inserted here have no linked event."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"data\": {\n        \"id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n        \"type\": \"rewards\",\n        \"status\": \"pending\"\n    }\n}"
+                        },
+                        {
+                            "name": "Ingest rewards Response #2",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/rewards",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/rewards",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"rewards\": [\n        {\n            \"dedup_key\": \"rwd-1\",\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"reward_type\": \"coupon\",\n            \"reward_code\": \"XMAS10\",\n            \"status\": \"granted\",\n            \"granted_at\": \"2026-01-15T10:00:00Z\",\n            \"redeemed_at\": \"2026-01-20T10:00:00Z\"\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"reward_type\": \"coupon\",\n            \"reward_code\": \"XMAS10\",\n            \"status\": \"granted\",\n            \"granted_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous append of a rewards batch. Idempotent on\n(version_id, dedup_key) when a key is provided; keyless rows are always\nappended. Rows inserted here have no linked event."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"Batch too large.\"\n}"
+                        },
+                        {
+                            "name": "Ingest rewards Response #3",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/rewards",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/rewards",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"rewards\": [\n        {\n            \"dedup_key\": \"rwd-1\",\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"reward_type\": \"coupon\",\n            \"reward_code\": \"XMAS10\",\n            \"status\": \"granted\",\n            \"granted_at\": \"2026-01-15T10:00:00Z\",\n            \"redeemed_at\": \"2026-01-20T10:00:00Z\"\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"reward_type\": \"coupon\",\n            \"reward_code\": \"XMAS10\",\n            \"status\": \"granted\",\n            \"granted_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous append of a rewards batch. Idempotent on\n(version_id, dedup_key) when a key is provided; keyless rows are always\nappended. Rows inserted here have no linked event."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"The given data was invalid.\",\n    \"errors\": {\n        \"rewards.0.reward_type\": [\n            \"Required.\"\n        ]\n    }\n}"
+                        },
+                        {
+                            "name": "Ingest rewards Response #4",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions/:version/rewards",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions/:version/rewards",
+                                    "variable": [
+                                        {
+                                            "id": "version",
+                                            "key": "version",
+                                            "value": "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+                                            "description": "The version UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"rewards\": [\n        {\n            \"dedup_key\": \"rwd-1\",\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"reward_type\": \"coupon\",\n            \"reward_code\": \"XMAS10\",\n            \"status\": \"granted\",\n            \"granted_at\": \"2026-01-15T10:00:00Z\",\n            \"redeemed_at\": \"2026-01-20T10:00:00Z\"\n        },\n        {\n            \"player_id\": 42,\n            \"player_email\": \"x@a.com\",\n            \"reward_type\": \"coupon\",\n            \"reward_code\": \"XMAS10\",\n            \"status\": \"granted\",\n            \"granted_at\": \"2026-01-15T10:00:00Z\"\n        }\n    ]\n}"
+                                },
+                                "description": "Queue an asynchronous append of a rewards batch. Idempotent on\n(version_id, dedup_key) when a key is provided; keyless rows are always\nappended. Rows inserted here have no linked event."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"No query results for model [App\\\\Models\\\\Version].\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Show an import",
+                    "request": {
+                        "url": {
+                            "protocol": "http",
+                            "host": "{{baseUrl}}",
+                            "path": "api/v1/imports/:import",
+                            "query": [],
+                            "raw": "http://{{baseUrl}}/api/v1/imports/:import",
+                            "variable": [
+                                {
+                                    "id": "import",
+                                    "key": "import",
+                                    "value": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+                                    "description": "The import UUID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Return the current durable state and counters of an ingestion job."
+                    },
+                    "response": [
+                        {
+                            "name": "Show an import Response #1",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/imports/:import",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/imports/:import",
+                                    "variable": [
+                                        {
+                                            "id": "import",
+                                            "key": "import",
+                                            "value": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+                                            "description": "The import UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": null,
+                                "description": "Return the current durable state and counters of an ingestion job."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"data\": {\n        \"id\": \"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\",\n        \"type\": \"events\",\n        \"status\": \"completed\",\n        \"total_rows\": 100,\n        \"processed_rows\": 100,\n        \"inserted\": 98,\n        \"duplicates\": 0,\n        \"failed\": 2\n    }\n}"
+                        },
+                        {
+                            "name": "Show an import Response #2",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/imports/:import",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/imports/:import",
+                                    "variable": [
+                                        {
+                                            "id": "import",
+                                            "key": "import",
+                                            "value": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+                                            "description": "The import UUID."
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": null,
+                                "description": "Return the current durable state and counters of an ingestion job."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"No query results for model [App\\\\Models\\\\Import].\"\n}"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Versions",
+            "description": "",
+            "item": [
+                {
+                    "name": "Create a version",
+                    "request": {
+                        "url": {
+                            "protocol": "http",
+                            "host": "{{baseUrl}}",
+                            "path": "api/v1/versions",
+                            "query": [],
+                            "raw": "http://{{baseUrl}}/api/v1/versions"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Summer Campaign 2026\",\n    \"client_name\": \"Acme Inc.\",\n    \"status\": \"active\",\n    \"starts_at\": \"2026-06-01\",\n    \"ends_at\": \"2026-08-31\",\n    \"config\": {\n        \"*\": \"dark\"\n    }\n}"
+                        },
+                        "description": "Create a campaign/game version. Small synchronous operation; the uuid is\ngenerated server-side. Only `name` is required."
+                    },
+                    "response": [
+                        {
+                            "name": "Create a version Response #1",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions"
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"name\": \"Summer Campaign 2026\",\n    \"client_name\": \"Acme Inc.\",\n    \"status\": \"active\",\n    \"starts_at\": \"2026-06-01\",\n    \"ends_at\": \"2026-08-31\",\n    \"config\": {\n        \"*\": \"dark\"\n    }\n}"
+                                },
+                                "description": "Create a campaign/game version. Small synchronous operation; the uuid is\ngenerated server-side. Only `name` is required."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"data\": {\n        \"uuid\": \"3f2504e0-4f89-41d3-9a0c-0305e82c3301\",\n        \"name\": \"Summer Campaign\",\n        \"status\": \"draft\"\n    }\n}"
+                        },
+                        {
+                            "name": "Create a version Response #2",
+                            "originalRequest": {
+                                "url": {
+                                    "protocol": "http",
+                                    "host": "{{baseUrl}}",
+                                    "path": "api/v1/versions",
+                                    "query": [],
+                                    "raw": "http://{{baseUrl}}/api/v1/versions"
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"name\": \"Summer Campaign 2026\",\n    \"client_name\": \"Acme Inc.\",\n    \"status\": \"active\",\n    \"starts_at\": \"2026-06-01\",\n    \"ends_at\": \"2026-08-31\",\n    \"config\": {\n        \"*\": \"dark\"\n    }\n}"
+                                },
+                                "description": "Create a campaign/game version. Small synchronous operation; the uuid is\ngenerated server-side. Only `name` is required."
+                            },
+                            "header": null,
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"The given data was invalid.\",\n    \"errors\": {\n        \"name\": [\n            \"The name field is required.\"\n        ]\n    }\n}"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "auth": {
+        "type": "apikey",
+        "apikey": [
+            {
+                "key": "in",
+                "value": "header",
+                "type": "string"
+            },
+            {
+                "key": "key",
+                "value": "X-Api-Key",
+                "type": "string"
+            },
+            {
+                "key": "value",
+                "value": "{{api_key}}",
+                "type": "string"
+            }
+        ]
+    }
+}

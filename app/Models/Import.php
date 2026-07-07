@@ -9,9 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 /**
- * Durable state of an async ingestion job (players/events batch): source of
- * truth for the create/status endpoints. Exposed in URLs via `uuid`.
- * Domain timestamps handled manually (created/started/completed), no updated_at.
+ * Durable state of an async ingestion job (players/events/transactions/answers/
+ * rewards batch): source of truth for the create/status endpoints. Exposed in
+ * URLs via `uuid`. Domain timestamps handled manually (created/started/
+ * completed), no updated_at.
  */
 class Import extends Model
 {
@@ -19,6 +20,9 @@ class Import extends Model
 
     public const TYPE_PLAYERS = 'players';
     public const TYPE_EVENTS = 'events';
+    public const TYPE_TRANSACTIONS = 'transactions';
+    public const TYPE_ANSWERS = 'answers';
+    public const TYPE_REWARDS = 'rewards';
 
     public const STATUS_PENDING = 'pending';
     public const STATUS_PROCESSING = 'processing';

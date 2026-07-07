@@ -66,4 +66,36 @@ class PlayerResolverTest extends TestCase
 
         $this->assertSame([], (new PlayerResolver())->existingIds($version->id, []));
     }
+
+    public function test_candidates_for_gathers_ids_and_emails_from_a_whole_chunk(): void
+    {
+        $version = Version::factory()->create();
+        $byId = Player::factory()->create(['version_id' => $version->id]);
+        $user = User::factory()->create(['email' => 'mario@example.com']);
+        $byEmail = Player::factory()->create(['version_id' => $version->id, 'user_id' => $user->id]);
+
+        [$validIds, $playerByEmail] = (new PlayerResolver())->candidatesFor($version->id, [
+            ['player_id' => $byId->id],
+            ['player_email' => 'mario@example.com'],
+            ['player_id' => 999999],
+        ]);
+
+        $this->assertArrayHasKey((int) $byId->id, $validIds);
+        $this->assertArrayNotHasKey(999999, $validIds);
+        $this->assertSame(['mario@example.com' => $byEmail->id], $playerByEmail);
+    }
+
+    public function test_resolve_row_prefers_player_id_and_falls_back_to_player_email(): void
+    {
+        $resolver = new PlayerResolver();
+        $validIds = [42 => true];
+        $playerByEmail = ['mario@example.com' => 7];
+
+        $this->assertSame(42, $resolver->resolveRow(['player_id' => 42], $validIds, $playerByEmail));
+
+        $fallbackRow = ['player_id' => 999999, 'player_email' => 'mario@example.com'];
+        $this->assertSame(7, $resolver->resolveRow($fallbackRow, $validIds, $playerByEmail));
+        $this->assertNull($resolver->resolveRow(['player_id' => 999999], $validIds, $playerByEmail));
+        $this->assertNull($resolver->resolveRow([], $validIds, $playerByEmail));
+    }
 }

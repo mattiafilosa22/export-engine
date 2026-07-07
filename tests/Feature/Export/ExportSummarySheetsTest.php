@@ -59,7 +59,9 @@ class ExportSummarySheetsTest extends ExportTestCase
     /**
      * Regression guard: include_summary must not re-run count() on the real
      * (query) sheets — the KPIs sheet reuses the counts already computed for the
-     * progress total, it never re-queries them.
+     * progress total, it never re-queries them. Data_Quality's own 3 checks
+     * (DataQualityChecker) each run their own count() — that's expected, not
+     * a double-count of the real sheet.
      */
     public function test_include_summary_does_not_double_count_the_real_sheets(): void
     {
@@ -81,8 +83,7 @@ class ExportSummarySheetsTest extends ExportTestCase
         ])->assertStatus(202);
         $this->work();
 
-        // Exactly one COUNT query for the single real sheet, however many
-        // summary sheets are appended around it (all in-memory, no query).
-        $this->assertSame(1, $countQueries);
+        // 1 COUNT for the real Events sheet + 3 for the Data_Quality checks.
+        $this->assertSame(4, $countQueries);
     }
 }

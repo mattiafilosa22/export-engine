@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Event;
 use App\Models\Import;
 use App\Support\Ingestion\PlayerResolver;
+use App\Support\Ingestion\RowFieldNormalizer;
 use App\Support\Ingestion\TypedRecordWriter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -27,21 +28,11 @@ class IngestEventsJob extends AbstractIngestJob
     {
         $versionId = (int) $import->version_id;
         $resolver = app(PlayerResolver::class);
+        $normalizer = app(RowFieldNormalizer::class);
         $writer = app(TypedRecordWriter::class);
-        $processed = 0;
-        $inserted = 0;
-        $duplicates = 0;
-        $failed = 0;
 
-        foreach (array_chunk($import->payload, $this->chunkSize()) as $chunk) {
-            $counts = DB::transaction(function () use ($versionId, $chunk, $resolver, $writer, $logger) {
-                return $this->ingestChunk($versionId, $chunk, $resolver, $writer, $logger);
-            });
-
-            $processed += count($chunk);
-            $inserted += $counts['inserted'];
-            $duplicates += $counts['duplicates'];
-            $failed += $counts['failed'];
+        $ingestChunk = function (array $chunk) use ($versionId, $resolver, $normalizer, $writer, $logger) {
+            $counts = $this->ingestChunk($versionId, $chunk, $resolver, $normalizer, $writer, $logger);
 
             if ($counts['failed'] > 0) {
                 $logger->warning('import.events.unresolved', [
@@ -50,14 +41,11 @@ class IngestEventsJob extends AbstractIngestJob
                     'unresolved' => $counts['failed'],
                 ]);
             }
-        }
 
-        return [
-            'processed' => $processed,
-            'inserted' => $inserted,
-            'duplicates' => $duplicates,
-            'failed' => $failed,
-        ];
+            return $counts;
+        };
+
+        return $this->processInChunks($import, $ingestChunk);
     }
 
     /**
@@ -71,12 +59,13 @@ class IngestEventsJob extends AbstractIngestJob
         int $versionId,
         array $chunk,
         PlayerResolver $resolver,
+        RowFieldNormalizer $normalizer,
         TypedRecordWriter $writer,
         LoggerInterface $logger
     ): array {
         $now = Carbon::now()->toDateTimeString();
 
-        [$candidates, $failed] = $this->resolveCandidates($versionId, $chunk, $resolver);
+        [$candidates, $failed] = $this->resolveCandidates($versionId, $chunk, $resolver, $normalizer);
         [$new, $duplicates] = $this->newEvents($versionId, $candidates);
 
         if ($new === []) {
@@ -111,25 +100,18 @@ class IngestEventsJob extends AbstractIngestJob
      * @param array<int, array<string, mixed>> $chunk
      * @return array{0: array<int, array<string, mixed>>, 1: int}
      */
-    private function resolveCandidates(int $versionId, array $chunk, PlayerResolver $resolver): array
-    {
-        $ids = [];
-        $emails = [];
-        foreach ($chunk as $row) {
-            if (isset($row['player_id'])) {
-                $ids[] = (int) $row['player_id'];
-            }
-            if (isset($row['player_email'])) {
-                $emails[] = (string) $row['player_email'];
-            }
-        }
-        $validIds = $resolver->existingIds($versionId, $ids);
-        $playerByEmail = $resolver->resolve($versionId, $emails);
+    private function resolveCandidates(
+        int $versionId,
+        array $chunk,
+        PlayerResolver $resolver,
+        RowFieldNormalizer $normalizer
+    ): array {
+        [$validIds, $playerByEmail] = $resolver->candidatesFor($versionId, $chunk);
 
         $candidates = [];
         $failed = 0;
         foreach ($chunk as $row) {
-            $playerId = $this->resolvePlayerId($row, $validIds, $playerByEmail);
+            $playerId = $resolver->resolveRow($row, $validIds, $playerByEmail);
             if ($playerId === null) {
                 // Never create implicit players, never block the batch.
                 $failed++;
@@ -139,36 +121,13 @@ class IngestEventsJob extends AbstractIngestJob
             $candidates[] = [
                 'player_id' => $playerId,
                 'type' => (string) $row['type'],
-                'occurred_at' => $this->toUtc($row['occurred_at']),
+                'occurred_at' => $normalizer->toUtc($row['occurred_at']),
                 'payload' => is_array($row['payload'] ?? null) ? $row['payload'] : [],
-                'dedup_key' => $this->normalizeDedupKey($row),
+                'dedup_key' => $normalizer->normalizeDedupKey($row),
             ];
         }
 
         return [$candidates, $failed];
-    }
-
-    /**
-     * @param array<string, mixed> $row
-     * @param array<int, bool> $validIds
-     * @param array<string, int> $playerByEmail
-     */
-    private function resolvePlayerId(array $row, array $validIds, array $playerByEmail): ?int
-    {
-        if (isset($row['player_id'])) {
-            $id = (int) $row['player_id'];
-            if (isset($validIds[$id])) {
-                return $id;
-            }
-        }
-        if (isset($row['player_email'])) {
-            $email = (string) $row['player_email'];
-            if (isset($playerByEmail[$email])) {
-                return $playerByEmail[$email];
-            }
-        }
-
-        return null;
     }
 
     /**
@@ -250,28 +209,5 @@ class IngestEventsJob extends AbstractIngestJob
         }
 
         return $rows;
-    }
-
-    /**
-     * Missing or blank key => NULL: MySQL treats NULLs as distinct in the
-     * unique index, so the row always appends. A real key still dedups.
-     *
-     * @param array<string, mixed> $row
-     */
-    private function normalizeDedupKey(array $row): ?string
-    {
-        $key = isset($row['dedup_key']) ? trim((string) $row['dedup_key']) : '';
-
-        return $key === '' ? null : $key;
-    }
-
-    /**
-     * Normalizes a domain timestamp to UTC.
-     *
-     * @param mixed $value
-     */
-    private function toUtc($value): string
-    {
-        return Carbon::parse($value)->utc()->toDateTimeString();
     }
 }

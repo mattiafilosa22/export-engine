@@ -2,8 +2,11 @@
 
 namespace Tests\Feature\Ingestion;
 
+use App\Jobs\IngestAnswersJob;
 use App\Jobs\IngestEventsJob;
 use App\Jobs\IngestPlayersJob;
+use App\Jobs\IngestRewardsJob;
+use App\Jobs\IngestTransactionsJob;
 use App\Models\Import;
 use App\Models\Version;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -52,12 +55,14 @@ abstract class IngestionTestCase extends TestCase
 
     private function dispatchIngestJob(string $type, string $importUuid): void
     {
-        if ($type === Import::TYPE_EVENTS) {
-            IngestEventsJob::dispatch($importUuid);
+        $jobs = [
+            Import::TYPE_PLAYERS => IngestPlayersJob::class,
+            Import::TYPE_EVENTS => IngestEventsJob::class,
+            Import::TYPE_TRANSACTIONS => IngestTransactionsJob::class,
+            Import::TYPE_ANSWERS => IngestAnswersJob::class,
+            Import::TYPE_REWARDS => IngestRewardsJob::class,
+        ];
 
-            return;
-        }
-
-        IngestPlayersJob::dispatch($importUuid);
+        $jobs[$type]::dispatch($importUuid);
     }
 }
