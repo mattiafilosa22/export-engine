@@ -237,6 +237,15 @@ di milioni di righe lato server (demo/test, non un client reale) si usa `gamindo
 sopra) — è la via pensata apposta per la scala 10M eventi / 1M player, che aggira di proposito il
 confine sincrono HTTP con insert massivi a chunk.
 
+
+#### Vedere il resoconto di un import
+
+```bash
+curl --location 'http://localhost:8080/api/v1/imports/{import}' \
+--header 'Content-Type: application/json' \
+--header 'Accept: application/json'
+```
+
 #### Export configurabile
 
 Più fogli, colonne, filtri su campo standard e su campo JSON, ordinamento, aggregazione,
