@@ -92,9 +92,19 @@ duplica (eventi + tipizzati).
 **DoD:** rotte invariate, controller organizzati per feature, test verdi.
 
 ### Slice 9 — Bonus (extra challenge)
-Preview limitata a 100 righe; template salvabili (`export_templates`); client di test client↔server;
-**documentazione API con Scribe `^2.x`** (OpenAPI/Swagger; la 3.x richiede PHP 7.4).
-**DoD:** almeno 1–2 bonus completi e documentati.
+**Già implementati nelle slice precedenti** (4 dei 7 bonus della traccia): retry automatico export
+falliti (Slice 6), progress percentage (Slice 5/6), cancellazione export in corso (Slice 6),
+supporto a campi JSON dinamici (Slice 4).
+**Da implementare in questa slice** (scelti: valore/sforzo migliore):
+1. **Demo-client** — comando Artisan machine-to-machine (API key in header) che esercita l'intera
+   API `players → events → export → polling(progress) → download`, stampando ogni step. Doppio
+   guadagno: bonus + genera esempi cURL, export di esempio e prova del flusso async per il README
+   (dettaglio in fondo a questo file).
+2. **Preview export limitata a 100 righe** — endpoint **sincrono** che riusa `GenericSheetBuilder`
+   e ritorna le prime 100 righe in JSON (no XLSX async): feedback immediato prima dell'export pesante.
+**Rimandabile/opzionale:** template salvabili (`export_templates`); documentazione API con
+Scribe `^2.x` (OpenAPI/Swagger; la 3.x richiede PHP 7.4).
+**DoD:** demo-client + preview completi, testati e documentati.
 
 ### Slice 10 — Deliverable finali
 README (setup, comandi di avvio, comandi test, esempi cURL); esempio di export generato; copertura test.
@@ -109,7 +119,8 @@ README (setup, comandi di avvio, comandi test, esempi cURL); esempio di export g
 | README (setup, comandi, test, cURL) | 10 |
 | Esempio di export generato | 5 / 10 |
 | Tutti i comandi per l'output | 10 |
-| Extra challenge (preview, template, retry, progress, cancellazione, client) | 6 / 9 |
+| Extra challenge: JSON dinamici (4), progress (5/6), retry+cancellazione (6) | 4 / 5 / 6 |
+| Extra challenge: demo-client + preview 100 righe | 9 |
 
 ## Note
 

@@ -4,6 +4,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | API auth (machine-to-machine)
+    |--------------------------------------------------------------------------
+    |
+    | Optional shared API key. When empty (dev/tests) the ApiKey middleware is a
+    | no-op; when set, every v1 request must carry a matching `X-Api-Key` header.
+    |
+    */
+
+    'api_key' => env('GAMINDO_API_KEY'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Ingestion
     |--------------------------------------------------------------------------
     |
@@ -101,6 +113,10 @@ return [
     'export' => [
         'keyset_chunk' => (int) env('GAMINDO_EXPORT_KEYSET_CHUNK', 1000),
         'max_sheets' => (int) env('GAMINDO_EXPORT_MAX_SHEETS', 10),
+
+        // Synchronous preview cap: the preview endpoint returns at most this many
+        // rows per sheet (no job, no XLSX).
+        'preview_rows' => (int) env('GAMINDO_EXPORT_PREVIEW_ROWS', 100),
 
         // Aggregate functions the engine can build (safe, fixed SQL templates).
         'aggregations' => ['count', 'count_distinct', 'avg', 'sum', 'min', 'max'],

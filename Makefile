@@ -1,6 +1,6 @@
 DC ?= docker compose
 
-.PHONY: up down install key migrate fresh test lint lint-fix analyse bootstrap env docs
+.PHONY: up down install key migrate fresh test lint lint-fix analyse bootstrap env docs demo
 
 # Create .env from the template if missing (docker-compose needs it via env_file).
 env:
@@ -35,6 +35,10 @@ lint-fix:
 
 analyse:
 	$(DC) exec app composer analyse
+
+# Machine-to-machine demo client: drives the whole API end-to-end (needs the stack up + worker).
+demo:
+	$(DC) exec app php artisan gamindo:demo-client
 
 # Regenerate the API docs (HTML + OpenAPI + Postman) from Scribe annotations. Served at /docs/.
 docs:
