@@ -35,6 +35,7 @@ class IngestEventsController extends Controller
      * @bodyParam events[].type string required The event type. Example: transaction
      * @bodyParam events[].occurred_at string required When the event occurred. Example: 2026-01-15T10:00:00Z
      * @bodyParam events[].payload object Event data; also feeds the typed row. Example: {"amount":9.99}
+     * @bodyParam events[].payload.* string Arbitrary payload values (per event type). Example: 9.99
      *
      * @response 202 {"data":{"id":"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d","type":"events","status":"pending"}}
      * @response 413 {"message":"Batch too large."}

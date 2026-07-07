@@ -22,9 +22,20 @@ class ExportSpecParser
 
     public function parse(Export $export): ExportSpec
     {
-        $params = $export->params;
-        $sheets = isset($params['sheets']) && is_array($params['sheets']) ? $params['sheets'] : [];
         $exportDate = $export->created_at !== null ? $export->created_at->format('Y-m-d') : 'export';
+
+        return $this->parseParams((array) $export->params, $exportDate);
+    }
+
+    /**
+     * Parses already-validated params (canonical format) into typed SheetSpecs,
+     * decoupled from a persisted Export so the preview endpoint can reuse it.
+     *
+     * @param array<string, mixed> $params
+     */
+    public function parseParams(array $params, string $exportDate): ExportSpec
+    {
+        $sheets = isset($params['sheets']) && is_array($params['sheets']) ? $params['sheets'] : [];
         $dateFrom = isset($params['date_from']) ? (string) $params['date_from'] : null;
         $dateTo = isset($params['date_to']) ? (string) $params['date_to'] : null;
 

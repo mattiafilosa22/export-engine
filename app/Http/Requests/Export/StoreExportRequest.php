@@ -9,8 +9,13 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Boundary validation of the export request in the traccia canonical format
- * (top-level format/date_from/date_to/sheets). Validation is permissive: nothing
+ * Boundary validation of the export request in the traccia canonical format:
+ * the ONLY accepted client shape is top-level `format`/`date_from`/`date_to`/
+ * `sheets` — rules validate exactly that shape (no internal remapping before
+ * validation), so the client contract and the generated docs stay in sync.
+ * `exportParams()` reshapes the validated root fields into the `params` array
+ * the domain persists (mirrors the `exports.params` DB column) — an internal
+ * concern the client is never exposed to. Validation is permissive: nothing
  * per-sheet is required (sensible defaults live in ExportSpecParser); only the
  * validity of provided values is enforced against the source whitelists (plus
  * GROUP BY coherence), so no user string reaches SQL as an identifier.
@@ -26,49 +31,22 @@ class StoreExportRequest extends FormRequest
     }
 
     /**
-     * Accepts the canonical top-level shape by wrapping `sheets`/`date_from`/
-     * `date_to` under `params` (a structural move, not a semantic translation).
-     */
-    protected function prepareForValidation(): void
-    {
-        if (is_array($this->input('params'))) {
-            return;
-        }
-
-        $sheets = $this->input('sheets');
-        if (! is_array($sheets)) {
-            return;
-        }
-
-        $params = ['sheets' => $sheets];
-        if ($this->input('date_from') !== null) {
-            $params['date_from'] = $this->input('date_from');
-        }
-        if ($this->input('date_to') !== null) {
-            $params['date_to'] = $this->input('date_to');
-        }
-
-        $this->merge(['params' => $params]);
-    }
-
-    /**
      * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
             'format' => ['sometimes', 'string', Rule::in([Export::FORMAT_XLSX])],
-            'params' => ['sometimes', 'array'],
-            'params.date_from' => ['sometimes', 'nullable', 'date'],
-            'params.date_to' => ['sometimes', 'nullable', 'date'],
-            'params.sheets' => ['sometimes', 'array', 'max:' . $this->maxSheets()],
-            'params.sheets.*.name' => ['sometimes', 'string', 'max:31'],
-            'params.sheets.*.source' => ['sometimes', 'string', Rule::in($this->sourceKeys())],
-            'params.sheets.*.columns' => ['sometimes', 'array'],
-            'params.sheets.*.metrics' => ['sometimes', 'array'],
-            'params.sheets.*.group_by' => ['sometimes', 'array'],
-            'params.sheets.*.sort' => ['sometimes', 'array'],
-            'params.sheets.*.filters' => ['sometimes', 'array'],
+            'date_from' => ['sometimes', 'nullable', 'date'],
+            'date_to' => ['sometimes', 'nullable', 'date'],
+            'sheets' => ['sometimes', 'array', 'max:' . $this->maxSheets()],
+            'sheets.*.name' => ['sometimes', 'string', 'max:31'],
+            'sheets.*.source' => ['sometimes', 'string', Rule::in($this->sourceKeys())],
+            'sheets.*.columns' => ['sometimes', 'array'],
+            'sheets.*.metrics' => ['sometimes', 'array'],
+            'sheets.*.group_by' => ['sometimes', 'array'],
+            'sheets.*.sort' => ['sometimes', 'array'],
+            'sheets.*.filters' => ['sometimes', 'array'],
         ];
     }
 
@@ -78,7 +56,7 @@ class StoreExportRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
-            $sheets = $this->input('params.sheets');
+            $sheets = $this->input('sheets');
             if (! is_array($sheets)) {
                 return;
             }
@@ -101,7 +79,7 @@ class StoreExportRequest extends FormRequest
             return;
         }
 
-        $key = "params.sheets.{$index}";
+        $key = "sheets.{$index}";
         $fields = array_keys($source['fields'] ?? []);
 
         $this->validateColumns($validator, "{$key}.columns", $sheet['columns'] ?? [], $source);
@@ -298,11 +276,28 @@ class StoreExportRequest extends FormRequest
     }
 
     /**
+     * Reshapes the validated root fields into the internal `params` array
+     * (persisted as-is into the `exports.params` DB column and read back by
+     * ExportSpecParser). Purely an internal concern: the client never sends
+     * `params` directly.
+     *
      * @return array<string, mixed>
      */
     public function exportParams(): array
     {
-        return (array) $this->input('params', []);
+        $params = [];
+
+        if (is_array($this->input('sheets'))) {
+            $params['sheets'] = $this->input('sheets');
+        }
+        if ($this->input('date_from') !== null) {
+            $params['date_from'] = $this->input('date_from');
+        }
+        if ($this->input('date_to') !== null) {
+            $params['date_to'] = $this->input('date_to');
+        }
+
+        return $params;
     }
 
     /**

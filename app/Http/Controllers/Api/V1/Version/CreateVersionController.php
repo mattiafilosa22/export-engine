@@ -28,6 +28,7 @@ class CreateVersionController extends Controller
      * @bodyParam starts_at string Campaign start (date/time). Example: 2026-06-01
      * @bodyParam ends_at string Campaign end (date/time, >= starts_at). Example: 2026-08-31
      * @bodyParam config object Free-form campaign configuration.
+     * @bodyParam config.* string Arbitrary configuration values. Example: dark
      *
      * @response 201 {"data":{"uuid":"3f2504e0-4f89-41d3-9a0c-0305e82c3301","name":"Summer Campaign","status":"draft"}}
      * @response 422 {"message":"The given data was invalid.","errors":{"name":["The name field is required."]}}

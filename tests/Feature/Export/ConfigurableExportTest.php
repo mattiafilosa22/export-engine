@@ -65,17 +65,17 @@ class ConfigurableExportTest extends ExportTestCase
         $this->assertCount(4, $sheets['Detail']);
     }
 
-    public function test_it_returns_202_and_queues_the_job_with_valid_params(): void
+    public function test_it_returns_202_and_queues_the_job_with_a_valid_spec(): void
     {
         Queue::fake();
         $version = Version::factory()->create();
 
         $response = $this->postJson("/api/v1/versions/{$version->uuid}/exports", [
-            'params' => ['sheets' => [[
+            'sheets' => [[
                 'source' => 'events',
                 'columns' => ['type', ['fn' => 'count', 'as' => 'events_count']],
                 'group_by' => ['type'],
-            ]]],
+            ]],
         ]);
 
         $response->assertStatus(202)->assertJsonPath('data.status', Export::STATUS_PENDING);
@@ -91,7 +91,7 @@ class ConfigurableExportTest extends ExportTestCase
         Queue::fake();
         $version = Version::factory()->create();
 
-        $response = $this->postJson("/api/v1/versions/{$version->uuid}/exports", ['params' => $params]);
+        $response = $this->postJson("/api/v1/versions/{$version->uuid}/exports", $params);
 
         $response->assertStatus(422);
         Queue::assertNothingPushed();

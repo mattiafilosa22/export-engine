@@ -21,7 +21,6 @@ class CreateExportTest extends TestCase
 
         $response = $this->postJson("/api/v1/versions/{$version->uuid}/exports", [
             'format' => 'xlsx',
-            'params' => [],
         ]);
 
         $response->assertStatus(202)

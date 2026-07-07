@@ -36,6 +36,7 @@ class CreateExportController extends Controller
      * @bodyParam sheets[].metrics string[] Named metrics: count, unique_players, avg_score.
      * @bodyParam sheets[].group_by string[] Field aliases (dot-notation like payload.language allowed).
      * @bodyParam sheets[].filters object Whitelisted filters, e.g. {"language":"it"}.
+     * @bodyParam sheets[].filters.* string Filter value for a whitelisted alias. Example: it
      * @bodyParam sheets[].sort string[] Sort as "column:direction" (e.g. "registered_at:desc") or objects.
      *
      * @response 202 {"data":{"id":"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d","status":"pending","format":"xlsx"}}
