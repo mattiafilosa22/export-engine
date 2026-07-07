@@ -10,6 +10,7 @@ use App\Support\Export\ExportStorage;
 use App\Support\Export\Query\FilterApplier;
 use App\Support\Export\Sheet\GenericSheetBuilder;
 use App\Support\Export\Sheet\Sheet;
+use App\Support\Export\Sheet\SummarySheetBuilder;
 use App\Support\Export\XlsxExportWriter;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -144,9 +145,28 @@ class GenerateExportJob implements ShouldQueue
         $sheets = $this->buildSheets($export, $parser, $filters);
 
         $total = 0;
+        $sheetCounts = [];
         foreach ($sheets as $sheet) {
-            $total += $sheet->count();
+            $count = $sheet->count();
+            $sheetCounts[$sheet->name()] = $count;
+            $total += $count;
         }
+
+        if ($export->params['include_summary'] ?? false) {
+            $summary = (new SummarySheetBuilder())->build($export, $sheetCounts);
+            $sheets = array_merge(
+                [$summary['readme'], $summary['kpis'], $summary['configuration']],
+                $sheets,
+                [$summary['dataQuality']]
+            );
+
+            // In-memory sheets: cheap count(), no re-query of the real (query) sheets.
+            $total += $summary['readme']->count()
+                + $summary['kpis']->count()
+                + $summary['configuration']->count()
+                + $summary['dataQuality']->count();
+        }
+
         $export->total_rows = $total;
         $export->save();
         $state->setProgress($export->uuid, 0);

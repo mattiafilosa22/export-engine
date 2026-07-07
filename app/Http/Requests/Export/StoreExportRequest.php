@@ -39,6 +39,7 @@ class StoreExportRequest extends FormRequest
             'format' => ['sometimes', 'string', Rule::in([Export::FORMAT_XLSX])],
             'date_from' => ['sometimes', 'nullable', 'date'],
             'date_to' => ['sometimes', 'nullable', 'date'],
+            'include_summary' => ['sometimes', 'boolean'],
             'sheets' => ['sometimes', 'array', 'max:' . $this->maxSheets()],
             'sheets.*.name' => ['sometimes', 'string', 'max:31'],
             'sheets.*.source' => ['sometimes', 'string', Rule::in($this->sourceKeys())],
@@ -295,6 +296,9 @@ class StoreExportRequest extends FormRequest
         }
         if ($this->input('date_to') !== null) {
             $params['date_to'] = $this->input('date_to');
+        }
+        if ($this->input('include_summary') !== null) {
+            $params['include_summary'] = $this->boolean('include_summary');
         }
 
         return $params;

@@ -38,6 +38,7 @@ class CreateExportController extends Controller
      * @bodyParam sheets[].filters object Whitelisted filters, e.g. {"language":"it"}.
      * @bodyParam sheets[].filters.* string Filter value for a whitelisted alias. Example: it
      * @bodyParam sheets[].sort string[] Sort as "column:direction" (e.g. "registered_at:desc") or objects.
+     * @bodyParam include_summary boolean Add README/KPIs/Configurazione_Richiesta/Data_Quality sheets. Example: true
      *
      * @response 202 {"data":{"id":"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d","status":"pending","format":"xlsx"}}
      * @response 404 {"message":"No query results for model [App\\Models\\Version]."}
