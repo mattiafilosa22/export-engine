@@ -73,6 +73,67 @@ docker compose exec app php artisan gamindo:export-benchmark --rows=500000
 `gamindo:seed-demo` è stato eseguito realmente a piena scala in fase di sviluppo:
 **1.000.000 di player e 10.000.000 di eventi**, seminati con successo.
 
+## Heavy Load Testing
+
+### 1. Batch Ingestione Pesante
+
+```bash
+# Batch al limite (5000 righe) → 202 Accepted
+curl -X POST http://localhost:8080/api/v1/versions/{version}/players \
+  -H 'Content-Type: application/json' \
+  -d @manual-test/players/valid-at-cap-5000.json
+
+# Batch oltre limite (5001 righe) → 413 Payload Too Large
+curl -X POST http://localhost:8080/api/v1/versions/{version}/players \
+  -H 'Content-Type: application/json' \
+  -d @manual-test/players/invalid-oversized-5001.json
+```
+
+### 2. Seeder Database
+
+```bash
+# Genera versione con 20k player + 2M eventi (~ 2-3 min, a chunk transazionali)
+docker compose exec app php artisan gamindo:seed-demo --players=20000 --events=2000000
+
+# Scala massima provata (produzione)
+docker compose exec app php artisan gamindo:seed-demo --players=1000000 --events=10000000
+```
+
+### 3. Export Grandi Volumi
+
+```bash
+# Benchmark: genera export da 500k righe, misura memoria e durata
+docker compose exec app php artisan gamindo:export-benchmark --rows=500000
+# Output: picco memoria, righe/sec, durata totale
+```
+
+### 4. Monitoring Progress
+
+```bash
+# Poll export fino a completamento (vedi progress %)
+while true; do
+  curl -s http://localhost:8080/api/v1/exports/{export_id} | jq '{status: .data.status, progress: .data.progress}'
+  sleep 2
+done
+```
+
+### 5. Verifiche Performance
+
+```bash
+# Dimensione DB dopo seed
+docker compose exec db mysql -u root -p$MYSQL_ROOT_PASSWORD gamindo -e "
+  SELECT table_name, ROUND(((data_length + index_length) / 1024 / 1024), 2) as size_mb
+  FROM information_schema.TABLES
+  WHERE table_schema = 'gamindo'
+  ORDER BY size_mb DESC;"
+
+# Conteggio dati
+docker compose exec app php artisan tinker
+>>> DB::table('players')->count()        // player
+>>> DB::table('events')->count()         // eventi
+>>> DB::table('exports')->count()        // export generati
+```
+
 ## Endpoint
 
 | Metodo | Path                                          | Descrizione                                 |
@@ -91,25 +152,47 @@ docker compose exec app php artisan gamindo:export-benchmark --rows=500000
 | `POST` | `/api/v1/exports/{export}/cancel`              | Cancella un export in corso                  |
 | `GET`  | `/api/v1/exports/{export}/download`            | Scarica il file XLSX                         |
 
-Documentazione interattiva completa (prova le richieste dal browser) + OpenAPI + Postman:
+## Documentazione API
+
+### Browser Interattivo (Scribe)
+
+Documentazione interattiva per provare le richieste direttamente dal browser:
 
 ```bash
-make docs   # poi apri http://localhost:8080/docs
+make docs   # Genera http://localhost:8080/docs/
 ```
 
-`make docs` rigenera anche `public/docs/collection.json` (Postman) e `openapi.yaml`, ma
-`public/docs` è un artefatto build, non versionato. Per un import diretto in Postman senza dover
-avviare lo stack, una copia stabile della collection è committata in `docs/postman/`:
+Accedi a http://localhost:8080/docs/ per una UI interattiva di tutti gli endpoint con descrizioni,
+parametri, response di esempio.
 
-- `docs/postman/gamindo-export-engine.postman_collection.json` — tutti gli endpoint, auth
-  `X-Api-Key` già collegata alla variabile `{{api_key}}` (nessun valore reale al suo interno).
-- `docs/postman/gamindo-local.postman_environment.json` — template con `baseUrl=localhost:8080`
-  e `api_key` vuota (tipo `secret`): importalo e valorizza `api_key` solo se hai impostato
-  `GAMINDO_API_KEY` in `.env` (altrimenti lascialo vuoto, l'auth è no-op).
+### Postman (Consigliato per Testing & Debugging)
 
-In Postman: *Import* → seleziona entrambi i file → seleziona l'environment "Gamindo Local" in alto
-a destra. Se cambi gli endpoint, rigenera la copia committata (JSON puro, non supporta commenti
-interni — comando qui):
+**Consigliamo Postman** — offre un'esperienza migliore rispetto a cURL per composizione richieste,
+variabili d'ambiente, test automation, e gestione dello storico.
+
+#### Setup Rapido (2 min)
+
+1. **Scarica Postman** da https://www.postman.com/downloads/ (gratuito)
+
+2. **Importa collection e environment** (pre-configurati, committati nel repo):
+   - `docs/postman/gamindo-export-engine.postman_collection.json` — tutti gli endpoint
+   - `docs/postman/gamindo-local.postman_environment.json` — variabili (baseUrl, api_key)
+
+3. **In Postman**: `File → Import → seleziona i due file sopra`
+
+4. **Attiva l'environment**: In alto a destra dropdown → seleziona **"Gamindo Local"**
+
+5. **Valorizza api_key** (opzionale, solo se `GAMINDO_API_KEY` impostata in `.env`):
+   - Clicca l'occhio accanto a "Gamindo Local" → edit → cambia "api_key"
+
+#### Variabili d'Ambiente Disponibili
+
+| Variabile | Default | Descrizione |
+|-----------|---------|-------------|
+| `baseUrl` | `http://localhost:8080` | URL base API (modifica per staging/prod) |
+| `api_key` | (vuoto) | Header X-Api-Key (richiesto solo se env GAMINDO_API_KEY set) |
+
+#### Aggiorna Collection (dopo cambio endpoint)
 
 ```bash
 make docs
@@ -122,6 +205,17 @@ file_put_contents(
     json_encode($c, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n"
 );
 '
+```
+
+Poi re-importa in Postman (o aggiorna la collection esistente).
+
+### OpenAPI
+
+Generato automaticamente da Scribe in `public/docs/openapi.yaml` (utile per integrazioni CI/CD,
+generatori di client SDK):
+
+```bash
+make docs   # genera anche openapi.yaml
 ```
 
 ## Client dimostrativo (Client ↔ Server)
@@ -176,6 +270,16 @@ curl -X POST http://localhost:8080/api/v1/versions \
 curl -X POST http://localhost:8080/api/v1/versions/{version}/players \
   -H 'Content-Type: application/json' \
   -d '{"players": [{"email": "player1@example.com", "language": "it"}]}'
+```
+
+#### Lista player (paginata)
+
+```bash
+# Ottiene i player della versione (keyset pagination, default 50 per pagina)
+curl 'http://localhost:8080/api/v1/versions/{version}/players'
+
+# Con parametri di paginazione
+curl 'http://localhost:8080/api/v1/versions/{version}/players?per_page=100&after_id=42'
 ```
 
 #### Ingestione eventi
@@ -284,11 +388,74 @@ curl -X POST http://localhost:8080/api/v1/versions/{version}/exports/preview \
   -d '{"sheets": [{"source": "events"}]}'
 ```
 
-#### Stato/progress ed export
+#### Polling import fino a completamento
 
 ```bash
+# Genera un import_id (dalla risposta di un POST /players o /events, header Location)
+# Quindi polling ogni 100ms finché status != "pending"
+IMPORT_ID="<import-id-da-risposta-202>"
+while true; do
+  RESPONSE=$(curl -s http://localhost:8080/api/v1/imports/$IMPORT_ID)
+  STATUS=$(echo $RESPONSE | jq -r '.status')
+  echo "Status: $STATUS"
+  if [ "$STATUS" != "pending" ]; then
+    echo "Import completato:"
+    echo $RESPONSE | jq .
+    break
+  fi
+  sleep 0.1
+done
+```
+
+#### Stato/progress export
+
+```bash
+# Stato + progress (se in corso)
 curl http://localhost:8080/api/v1/exports/{export}
-curl -o export.xlsx http://localhost:8080/api/v1/exports/{export}/download
+
+# Output esempio (in progresso):
+# {"id": "uuid", "version_id": 1, "status": "processing", "progress": 45, "rows": 5000}
+```
+
+#### Polling export fino a completamento + download
+
+```bash
+# Richiesta export
+EXPORT_ID=$(curl -s -X POST http://localhost:8080/api/v1/versions/{version}/exports \
+  -H 'Content-Type: application/json' \
+  -d '{"sheets": [{"source": "players"}]}' | jq -r '.id')
+
+echo "Export ID: $EXPORT_ID"
+
+# Polling fino a completamento (status = "completed" o "failed")
+while true; do
+  RESPONSE=$(curl -s http://localhost:8080/api/v1/exports/$EXPORT_ID)
+  STATUS=$(echo $RESPONSE | jq -r '.status')
+  PROGRESS=$(echo $RESPONSE | jq -r '.progress // 0')
+  echo "[$PROGRESS%] Status: $STATUS"
+
+  if [ "$STATUS" = "completed" ]; then
+    echo "Export pronto, scaricamento..."
+    curl -o export.xlsx http://localhost:8080/api/v1/exports/$EXPORT_ID/download
+    echo "Salvato in export.xlsx"
+    break
+  elif [ "$STATUS" = "failed" ]; then
+    echo "Export fallito:"
+    echo $RESPONSE | jq .
+    break
+  fi
+  sleep 1
+done
+```
+
+#### Cancellazione export in corso
+
+```bash
+# Cancella un export (solo se status = "pending" o "processing")
+curl -X POST http://localhost:8080/api/v1/exports/{export}/cancel \
+  -H 'Content-Type: application/json'
+
+# Output: {"id": "uuid", "status": "cancelled"}
 ```
 
 ## Esempio di export generato
